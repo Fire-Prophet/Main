@@ -108,12 +108,69 @@ height_class_map = {
     "40": "임분고 39m 이상"
 }
 
+# Anderson 13 연료 모델 매핑 함수
+def map_to_anderson13(row):
+    """
+    한국 산림 데이터를 Anderson 13 연료 모델로 매핑
+    """
+    # 비산림/무립목지 처리
+    if row['STORUNST_CD'] in ['0', '2'] or row['FRTP_CD'] == '0':
+        return 'NB1'  # Nonburnable
+    
+    # 입목지 처리
+    if row['STORUNST_CD'] == '1':
+        forest_type = row['FRTP_CD']
+        density = row['DNST_CD']
+        height = int(row['HEIGT_CD']) if row['HEIGT_CD'].isdigit() else 0
+        
+        # 침엽수림
+        if forest_type == '1':
+            if density == 'C' and height >= 20:  # 밀도 높고 키 큰 침엽수
+                return 'TU1'  # Timber-Understory, light load
+            elif density in ['B', 'C']:
+                return 'TU2'  # Timber-Understory, moderate load
+            else:
+                return 'TL1'  # Timber Litter, light load
+        
+        # 활엽수림
+        elif forest_type == '2':
+            if density == 'C' and height >= 20:
+                return 'TU3'  # Timber-Understory, moderate load, hardwood
+            elif density in ['B', 'C']:
+                return 'TU4'  # Timber-Understory, dwarf conifer
+            else:
+                return 'TL2'  # Timber Litter, moderate load
+        
+        # 혼효림
+        elif forest_type == '3':
+            if density == 'C':
+                return 'TU5'  # Timber-Understory, very high load
+            else:
+                return 'TL3'  # Timber Litter, moderate load
+        
+        # 죽림
+        elif forest_type == '4':
+            return 'GS1'  # Grass-Shrub, low load
+    
+    # 기타 토지이용
+    if row['KOFTR_GROU_CD'] in ['91', '92', '93', '94', '95', '99']:
+        if row['KOFTR_GROU_CD'] == '92':  # 초지
+            return 'GR1'  # Grass, short sparse
+        elif row['KOFTR_GROU_CD'] == '83':  # 관목덤불
+            return 'SH1'  # Shrub, low load
+        else:
+            return 'NB1'  # Nonburnable
+    
+    return 'TL1'  # 기본값
 
-# 매핑 적용 예시
+# 매핑 적용
 gdf["Storunst"] = gdf["STORUNST_CD"].map(storunst_map)
-gdf["ForestType"]   = gdf["FRTP_CD"].map(forest_type_map)
-gdf["Species"]  = gdf["KOFTR_GROU_CD"].map(species_group_map)
+gdf["ForestType"] = gdf["FRTP_CD"].map(forest_type_map)
+gdf["Species"] = gdf["KOFTR_GROU_CD"].map(species_group_map)
 gdf["DiaClass"] = gdf["DMCLS_CD"].map(diameter_class_map)
 gdf["AgeClass"] = gdf["AGCLS_CD"].map(age_class_map)
-gdf["Density"]  = gdf["DNST_CD"].map(density_code_map)
-gdf["HeightClass"]  = gdf["HEIGT_CD"].map(height_class_map)
+gdf["Density"] = gdf["DNST_CD"].map(density_code_map)
+gdf["HeightClass"] = gdf["HEIGT_CD"].map(height_class_map)
+
+# Anderson 13 연료 모델 매핑 추가
+gdf["Anderson13_FuelModel"] = gdf.apply(map_to_anderson13, axis=1)
