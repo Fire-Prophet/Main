@@ -1,0 +1,14 @@
+geopandas
+rasterio
+shapely
+pyproj
+xarray
+metpy
+wrf-python
+torch
+torchvision
+torchaudio
+pytorch-lightning
+scikit-learn
+folium
+cartopy
