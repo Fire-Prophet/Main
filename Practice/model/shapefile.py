@@ -1,7 +1,7 @@
 import geopandas as gpd
 
 # 1) 임상도 SHP 파일 경로 지정
-shp_path = "/44200/44200.shp"
+shp_path = "/Users/mac/Git/Main/Practice/model/44200/44200.shp"
 
 # 2) GeoDataFrame으로 불러오기
 gdf = gpd.read_file(shp_path)
