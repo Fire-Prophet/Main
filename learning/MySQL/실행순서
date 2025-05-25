@@ -1,0 +1,11 @@
+1. Mine.js 실행
+2. generateFuelData.js 실행
+
+Main.js
+  - db.js = PostSQL과 MySQL연결을 위한 함수 제공
+  - config.js = 데이터베이스 설정 및 테이블/컬럼 정보 로드
+  - ratings.js = 연료등급 기준 데이터 로드
+  - queries.js = SQL쿼리 생성 함수 로드
+  - UTILS.JS = 유틸리티 함수 로드
+
+generateFuelData.js = Main.js 실행으로 MySQL에 연료 테이블을 생성한다음, 해당 파일로 필요한 데이터만 추출하여 별도의 테이블 생
