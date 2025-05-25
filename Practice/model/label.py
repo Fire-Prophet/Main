@@ -78,7 +78,29 @@ density_code_map = {
     "C": "밀 (수관점유면적 71% 이상)"
 }
 
-
+height_class_map = {
+    "00": "임분고 1m 미만",
+    "02": "임분고 1m 이상 3m미만",
+    "04": "임분고 3m 이상 5m미만",
+    "06": "임분고 5m 이상 7m미만",
+    "08": "임분고 7m 이상 9m미만",
+    "10": "임분고 9m 이상 11m미만",
+    "12": "임분고 11m 이상 13m미만",
+    "14": "임분고 13m 이상 15m미만",
+    "16": "임분고 15m 이상 17m미만",
+    "18": "임분고 17m 이상 19m미만",
+    "20": "임분고 19m 이상 21m미만",
+    "22": "임분고 21m 이상 23m미만",
+    "24": "임분고 23m 이상 25m미만",
+    "26": "임분고 25m 이상 27m미만",
+    "28": "임분고 27m 이상 29m미만",
+    "30": "임분고 29m 이상 31m미만",
+    "32": "임분고 31m 이상 33m미만",
+    "34": "임분고 33m 이상 35m미만",
+    "36": "임분고 35m 이상 37m미만",
+    "38": "임분고 37m 이상 39m미만",
+    "40": "임분고 39m 이상"
+}
 
 
 # 매핑 적용 예시
@@ -87,3 +109,4 @@ gdf["Species"]    = gdf["KOFTR_GROU_CD"].map(species_group_map)
 gdf["DiaClass"]   = gdf["DMCLS_CD"].map(diameter_class_map)
 gdf["AgeClass"] = gdf["AGCLS_CD"].map(age_class_map)
 gdf["Density"] = gdf["DNST_CD"].map(density_code_map)
+gdf["HeightClass"] = gdf["HEIGT_CD"].map(height_class_map)
