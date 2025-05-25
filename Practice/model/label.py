@@ -1,3 +1,9 @@
+storunst_map = {
+    "1": "입목지",
+    "2": "무립목지",
+    "0": "비산림"
+}
+
 forest_type_map = {
     "0":"비산림/무립목지","1":"침엽수림","2":"활엽수림","3":"혼효림","4":"죽림"
 }
@@ -104,9 +110,10 @@ height_class_map = {
 
 
 # 매핑 적용 예시
-gdf["ForestType"] = gdf["FRTP_CD"].map(forest_type_map)
-gdf["Species"]    = gdf["KOFTR_GROU_CD"].map(species_group_map)
-gdf["DiaClass"]   = gdf["DMCLS_CD"].map(diameter_class_map)
+gdf["Storunst"] = gdf["STORUNST_CD"].map(storunst_map)
+gdf["ForestType"]   = gdf["FRTP_CD"].map(forest_type_map)
+gdf["Species"]  = gdf["KOFTR_GROU_CD"].map(species_group_map)
+gdf["DiaClass"] = gdf["DMCLS_CD"].map(diameter_class_map)
 gdf["AgeClass"] = gdf["AGCLS_CD"].map(age_class_map)
-gdf["Density"] = gdf["DNST_CD"].map(density_code_map)
-gdf["HeightClass"] = gdf["HEIGT_CD"].map(height_class_map)
+gdf["Density"]  = gdf["DNST_CD"].map(density_code_map)
+gdf["HeightClass"]  = gdf["HEIGT_CD"].map(height_class_map)
