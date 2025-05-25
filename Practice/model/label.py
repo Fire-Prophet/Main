@@ -60,9 +60,30 @@ diameter_class_map = {
 }
 # 나머지도 동일하게…
 
+age_class_map = {
+    "1": "1영급 (1~10년생)",
+    "2": "2영급 (11~20년생)",
+    "3": "3영급 (21~30년생)",
+    "4": "4영급 (31~40년생)",
+    "5": "5영급 (41~50년생)",
+    "6": "6영급 (51~60년생)",
+    "7": "7영급 (61~70년생)",
+    "8": "8영급 (71~80년생)",
+    "9": "9영급 (81년생 이상)"
+}
+
+density_code_map = {
+    "A": "소 (수관점유면적 50% 이하)",
+    "B": "중 (수관점유면적 51%~70% 이하)",
+    "C": "밀 (수관점유면적 71% 이상)"
+}
+
+
 
 
 # 매핑 적용 예시
 gdf["ForestType"] = gdf["FRTP_CD"].map(forest_type_map)
 gdf["Species"]    = gdf["KOFTR_GROU_CD"].map(species_group_map)
 gdf["DiaClass"]   = gdf["DMCLS_CD"].map(diameter_class_map)
+gdf["AgeClass"] = gdf["AGCLS_CD"].map(age_class_map)
+gdf["Density"] = gdf["DNST_CD"].map(density_code_map)
