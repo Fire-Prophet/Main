@@ -2,6 +2,14 @@ import numpy as np
 import matplotlib.pyplot as plt
 # 이 코드를 바탕으로 CA 실험, 확장, 시각화가 가능합니다.
 # 특정 규칙, 입력 데이터, 연료맵 등과 연동
+
+#이제 CA 모델(CAModel)이 Anderson13 연료맵(fuel_map)과 연료별 번짐확률(fuel_spread_probs)을 받아
+# 각 셀의 연료코드에 따라 번짐 확률을 다르게 적용할 수 있도록 확장되었습니다.
+
+# fuel_map: Anderson13 코드가 2D array로 들어가면 됩니다.
+# fuel_spread_probs: 예시) {'TL1': 0.15, 'TU1': 0.25, ...} 처럼 코드별 확률 지정
+# shapefile에서 rasterize로 연료맵을 만들고,
+# CA 모델 생성 시 CAModel(..., fuel_map=your_fuel_map, fuel_spread_probs=your_prob_dict)로 넘기면 됩니다.
 class CAModel:
     def __init__(self, grid_shape, n_states=2, p_ignite=0.01, seed=None, fuel_map=None, fuel_spread_probs=None):
         """
