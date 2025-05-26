@@ -3,6 +3,8 @@ import numpy as np
 from rasterio.features import rasterize
 from model.label import storunst_map, forest_type_map, species_group_map, diameter_class_map, age_class_map, density_code_map, height_class_map
 from model.ca_base import CAModel
+import os
+import matplotlib.pyplot as plt
 
 # 1. SHP 파일 로드 및 Anderson13 연료모델 벡터화
 shp_path = "model/44200/44200.shp"
@@ -69,9 +71,21 @@ ca = CAModel(
     fuel_spread_probs=fuel_spread_probs
 )
 ca.initialize(tree_density=0.7)
-# 중앙부 점화
 ca.ignite(fuel_array.shape[0]//2, fuel_array.shape[1]//2)
+
+# 결과 저장 폴더
+result_dir = 'ca_results'
+os.makedirs(result_dir, exist_ok=True)
+
+# 시뮬레이션 및 저장
 for i in range(50):
     ca.step()
-    if i % 10 == 0:
-        ca.plot()
+    # 상태 저장 (npy)
+    np.save(os.path.join(result_dir, f'step_{i:03d}.npy'), ca.grid)
+    # 이미지 저장 (png)
+    if i % 10 == 0 or i == 49:
+        plt.imshow(ca.grid, cmap='hot', interpolation='nearest')
+        plt.title(f'CA Step {i}')
+        plt.axis('off')
+        plt.savefig(os.path.join(result_dir, f'step_{i:03d}.png'), bbox_inches='tight')
+        plt.close()
