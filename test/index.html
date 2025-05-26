@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>간단 투두 리스트</title>
+</head>
+<body>
+    <h1>나의 투두 리스트</h1>
+    <ul>
+        {% for i, todo in enumerate(todos) %}
+        <li>
+            <span style="text-decoration: {{ 'line-through' if todo.done else 'none' }};">
+                {{ todo.task }}
+            </span>
+            <a href="{{ url_for('toggle_todo', index=i) }}">완료/취소</a>
+            <a href="{{ url_for('delete_todo', index=i) }}">삭제</a>
+        </li>
+        {% endfor %}
+    </ul>
+    <form action="{{ url_for('add_todo') }}" method="post">
+        <input type="text" name="todo" placeholder="새로운 할 일">
+        <button type="submit">추가</button>
+    </form>
+</body>
+</html>
