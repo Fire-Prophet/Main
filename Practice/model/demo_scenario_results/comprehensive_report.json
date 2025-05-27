@@ -1,6 +1,6 @@
 {
   "metadata": {
-    "generation_time": "2025-05-27T23:37:19.192952",
+    "generation_time": "2025-05-27T23:40:44.627426",
     "simulation_config": {
       "simulation": {
         "grid_size": [
@@ -38,7 +38,7 @@
     "total_burned_area": 0,
     "burn_percentage": 0.0,
     "total_simulation_steps": 50,
-    "final_fire_size": 4,
+    "final_fire_size": 5,
     "fuel_statistics": {
       "GR1": {
         "total_cells": 400,
@@ -82,9 +82,9 @@
       "jaccard_similarity": 0.0,
       "area_error_ratio": 1.0,
       "predicted_area": 0,
-      "actual_area": 1456,
+      "actual_area": 1482,
       "intersection_area": 0,
-      "union_area": 1456
+      "union_area": 1482
     },
     "temporal_progression": {
       "burn_rate_progression": {
@@ -164,9 +164,7 @@
           0,
           0,
           0,
-          0,
-          5,
-          0,
+          7,
           0,
           0,
           0,
@@ -180,6 +178,8 @@
           0,
           0,
           0,
+          0,
+          8,
           0,
           0,
           0,
@@ -197,7 +197,7 @@
           0,
           0
         ],
-        "mean_growth": 0.2653061224489796,
+        "mean_growth": 0.46938775510204084,
         "max_growth": 8.0,
         "min_growth": 0.0
       },
@@ -247,44 +247,44 @@
       }
     },
     "confusion_matrix": {
-      "accuracy": 0.8544,
+      "accuracy": 0.8518,
       "precision": 0.0,
       "recall": 0.0,
       "f1_score": 0.0,
       "confusion_matrix": [
         [
-          8544,
+          8518,
           0
         ],
         [
-          1456,
+          1482,
           0
         ]
       ],
       "classification_report": {
         "0": {
-          "precision": 0.8544,
+          "precision": 0.8518,
           "recall": 1.0,
-          "f1-score": 0.9214840379637619,
-          "support": 8544.0
+          "f1-score": 0.9199697591532563,
+          "support": 8518.0
         },
         "1": {
           "precision": 0.0,
           "recall": 0.0,
           "f1-score": 0.0,
-          "support": 1456.0
+          "support": 1482.0
         },
-        "accuracy": 0.8544,
+        "accuracy": 0.8518,
         "macro avg": {
-          "precision": 0.4272,
+          "precision": 0.4259,
           "recall": 0.5,
-          "f1-score": 0.46074201898188094,
+          "f1-score": 0.45998487957662815,
           "support": 10000.0
         },
         "weighted avg": {
-          "precision": 0.7299993600000001,
-          "recall": 0.8544,
-          "f1-score": 0.7873159620362381,
+          "precision": 0.72556324,
+          "recall": 0.8518,
+          "f1-score": 0.7836302408467437,
           "support": 10000.0
         }
       }
@@ -292,12 +292,12 @@
     "roc_metrics": {
       "fpr": [
         0.0,
-        0.0,
+        0.0003521953510213665,
         1.0
       ],
       "tpr": [
         0.0,
-        0.0027472527472527475,
+        0.001349527665317139,
         1.0
       ],
       "thresholds": [
@@ -305,51 +305,51 @@
         0.5,
         0.0
       ],
-      "auc": 0.5013736263736264
+      "auc": 0.5004986661571479
     }
   },
   "realism_metrics": {
-    "spotting_events": 1,
-    "max_fire_intensity": 262.8334655761719,
-    "mean_flame_length": 0.7310926914215088,
+    "spotting_events": 0,
+    "max_fire_intensity": 224.16917419433594,
+    "mean_flame_length": 0.7600752115249634,
     "fire_behavior_diversity": 0,
     "suppression_effectiveness": 0
   },
   "performance_history": [
     {
       "step": 10,
-      "timestamp": "2025-05-27T23:37:19.010293",
+      "timestamp": "2025-05-27T23:40:44.466889",
       "validation_score": 0.0,
       "realism_score": 0.3,
       "combined_score": 0.15
     },
     {
       "step": 20,
-      "timestamp": "2025-05-27T23:37:19.047348",
+      "timestamp": "2025-05-27T23:40:44.496735",
       "validation_score": 0.0,
-      "realism_score": 0.6,
-      "combined_score": 0.3
+      "realism_score": 0.3,
+      "combined_score": 0.15
     },
     {
       "step": 30,
-      "timestamp": "2025-05-27T23:37:19.083359",
+      "timestamp": "2025-05-27T23:40:44.532089",
       "validation_score": 0.0,
-      "realism_score": 0.6,
-      "combined_score": 0.3
+      "realism_score": 0.3,
+      "combined_score": 0.15
     },
     {
       "step": 40,
-      "timestamp": "2025-05-27T23:37:19.125293",
+      "timestamp": "2025-05-27T23:40:44.566430",
       "validation_score": 0.0,
-      "realism_score": 0.6,
-      "combined_score": 0.3
+      "realism_score": 0.3,
+      "combined_score": 0.15
     },
     {
       "step": 50,
-      "timestamp": "2025-05-27T23:37:19.162426",
+      "timestamp": "2025-05-27T23:40:44.600407",
       "validation_score": 0.0,
-      "realism_score": 0.6,
-      "combined_score": 0.3
+      "realism_score": 0.3,
+      "combined_score": 0.15
     }
   ],
   "improvement_suggestions": [
