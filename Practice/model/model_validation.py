@@ -419,7 +419,9 @@ class ModelValidator:
         
         report_path = os.path.join(output_dir, 'validation_report.json')
         with open(report_path, 'w', encoding='utf-8') as f:
-            json.dump(report_data, f, indent=2, ensure_ascii=False)
+            # Convert numpy types to JSON serializable types
+            serializable_data = self._convert_numpy_types(report_data)
+            json.dump(serializable_data, f, indent=2, ensure_ascii=False)
         
         # 시각화 생성
         self._create_validation_plots(output_dir)
