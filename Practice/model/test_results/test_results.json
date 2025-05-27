@@ -48,7 +48,7 @@
   "혼동 행렬 계산": {
     "status": "✅ 성공",
     "result": {
-      "accuracy": 0.5175,
+      "accuracy": 0.5275,
       "f1_score": 0.0
     }
   },
@@ -92,7 +92,7 @@
   },
   "모델 설정": {
     "status": "❌ 실패",
-    "error": "TopographicFireModel.__init__() missing 1 required positional argument: 'terrain_model'"
+    "error": "index 40 is out of bounds for axis 1 with size 40"
   },
   "시뮬레이션 실행": {
     "status": "❌ 실패",
@@ -106,16 +106,16 @@
     "status": "✅ 완료",
     "result": {
       "50x50": {
-        "time": 0.0011031627655029297,
-        "cells_per_second": 22662113.680570565
+        "time": 0.0026497840881347656,
+        "cells_per_second": 9434730.969947813
       },
       "100x100": {
-        "time": 0.004123210906982422,
-        "cells_per_second": 24252943.2173008
+        "time": 0.004141092300415039,
+        "cells_per_second": 24148218.08970004
       },
       "150x150": {
-        "time": 0.008095026016235352,
-        "cells_per_second": 27794845.81627544
+        "time": 0.013922929763793945,
+        "cells_per_second": 16160391.80094868
       }
     }
   }

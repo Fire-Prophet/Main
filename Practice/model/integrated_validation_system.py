@@ -202,7 +202,7 @@ class IntegratedValidationSystem:
             if self.config['realism']['enable_seasonal_effects']:
                 seasonal_effects = self.realistic_model.calculate_seasonal_effects(datetime.now())
                 # 계절 효과를 확산 확률에 반영
-                self.ca_model.base_spread_prob *= seasonal_effects['combined_factor']
+                self.ca_model.params['base_spread_prob'] *= seasonal_effects['combined_factor']
             
             current_grid = new_grid
             step_history.append(current_grid.copy())
