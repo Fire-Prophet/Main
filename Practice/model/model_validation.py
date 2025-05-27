@@ -429,6 +429,36 @@ class ModelValidator:
         print(f"검증 보고서가 {output_dir}에 저장되었습니다.")
         return report_path
     
+    def _convert_numpy_types(self, obj):
+        """Convert numpy types to JSON serializable types"""
+        if isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            # Handle special float values that can't be serialized to JSON
+            float_val = float(obj)
+            if np.isnan(float_val):
+                return None  # or "NaN" as string
+            elif np.isinf(float_val):
+                return 1e308 if float_val > 0 else -1e308  # Use large finite numbers instead
+            else:
+                return float_val
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+        elif isinstance(obj, dict):
+            return {key: self._convert_numpy_types(value) for key, value in obj.items()}
+        elif isinstance(obj, list):
+            return [self._convert_numpy_types(item) for item in obj]
+        elif isinstance(obj, float):
+            # Handle regular Python floats with special values
+            if np.isnan(obj):
+                return None
+            elif np.isinf(obj):
+                return 1e308 if obj > 0 else -1e308
+            else:
+                return obj
+        else:
+            return obj
+    
     def _generate_summary(self) -> Dict:
         """검증 결과 요약"""
         summary = {
