@@ -407,7 +407,8 @@ class IntegratedValidationSystem:
         self.validator = ModelValidator(self.simulation_results, actual_fire_data)
         
         # 모든 검증 수행
-        validation_results = {}\n        
+        validation_results = {}
+        
         # 확산 패턴 검증
         validation_results['spread_pattern'] = self.validator.validate_spread_pattern(actual_fire_data)
         
