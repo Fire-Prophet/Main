@@ -135,6 +135,12 @@ class IntegratedValidationSystem:
             terrain_base.elevation = elevation_map
             terrain_base.calculate_terrain_derivatives()
             self.terrain_model = TopographicFireModel(terrain_base)
+        else:
+            # Create synthetic terrain with same shape as fuel_map
+            from terrain_model import TerrainModel
+            terrain_base = TerrainModel()
+            terrain_base.create_synthetic_dem(shape=grid_size)
+            self.terrain_model = TopographicFireModel(terrain_base)
         
         # 인간 활동 데이터 설정
         if human_activity_data:
