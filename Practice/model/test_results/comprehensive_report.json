@@ -1,14 +1,14 @@
 {
   "metadata": {
-    "generation_time": "2025-05-27T23:37:19.192952",
+    "generation_time": "2025-05-27T23:37:15.740928",
     "simulation_config": {
       "simulation": {
         "grid_size": [
-          100,
-          100
+          40,
+          40
         ],
         "cell_size": 30.0,
-        "max_steps": 50,
+        "max_steps": 10,
         "validation_interval": 10
       },
       "validation": {
@@ -29,44 +29,29 @@
         "save_intermediate_results": true,
         "generate_animations": true,
         "create_detailed_reports": true,
-        "output_directory": "integrated_simulation_results"
+        "output_directory": "test_results"
       }
     },
-    "total_simulation_steps": 50
+    "total_simulation_steps": 10
   },
   "simulation_summary": {
     "total_burned_area": 0,
     "burn_percentage": 0.0,
-    "total_simulation_steps": 50,
-    "final_fire_size": 4,
+    "total_simulation_steps": 10,
+    "final_fire_size": 1,
     "fuel_statistics": {
-      "GR1": {
-        "total_cells": 400,
-        "burned_cells": 0,
-        "burn_ratio": 0.0
-      },
-      "GS2": {
-        "total_cells": 400,
+      "GS1": {
+        "total_cells": 518,
         "burned_cells": 0,
         "burn_ratio": 0.0
       },
       "TL1": {
-        "total_cells": 6800,
+        "total_cells": 548,
         "burned_cells": 0,
         "burn_ratio": 0.0
       },
       "TL2": {
-        "total_cells": 1200,
-        "burned_cells": 0,
-        "burn_ratio": 0.0
-      },
-      "TL3": {
-        "total_cells": 400,
-        "burned_cells": 0,
-        "burn_ratio": 0.0
-      },
-      "TU2": {
-        "total_cells": 800,
+        "total_cells": 534,
         "burned_cells": 0,
         "burn_ratio": 0.0
       }
@@ -82,53 +67,13 @@
       "jaccard_similarity": 0.0,
       "area_error_ratio": 1.0,
       "predicted_area": 0,
-      "actual_area": 1456,
+      "actual_area": 253,
       "intersection_area": 0,
-      "union_area": 1456
+      "union_area": 253
     },
     "temporal_progression": {
       "burn_rate_progression": {
         "rates": [
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
           0,
           0,
           0,
@@ -155,50 +100,10 @@
           0,
           0,
           0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          5,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          8,
-          0,
           0
         ],
-        "mean_growth": 0.2653061224489796,
-        "max_growth": 8.0,
+        "mean_growth": 0.0,
+        "max_growth": 0.0,
         "min_growth": 0.0
       },
       "acceleration_phases": {
@@ -209,33 +114,18 @@
       "growth_consistency": 0.0
     },
     "fuel_response": {
-      "GR1": {
-        "total_cells": 400,
-        "burned_cells": 0,
-        "burn_ratio": 0.0
-      },
-      "GS2": {
-        "total_cells": 400,
+      "GS1": {
+        "total_cells": 518,
         "burned_cells": 0,
         "burn_ratio": 0.0
       },
       "TL1": {
-        "total_cells": 6800,
+        "total_cells": 548,
         "burned_cells": 0,
         "burn_ratio": 0.0
       },
       "TL2": {
-        "total_cells": 1200,
-        "burned_cells": 0,
-        "burn_ratio": 0.0
-      },
-      "TL3": {
-        "total_cells": 400,
-        "burned_cells": 0,
-        "burn_ratio": 0.0
-      },
-      "TU2": {
-        "total_cells": 800,
+        "total_cells": 534,
         "burned_cells": 0,
         "burn_ratio": 0.0
       },
@@ -247,45 +137,45 @@
       }
     },
     "confusion_matrix": {
-      "accuracy": 0.8544,
+      "accuracy": 0.841875,
       "precision": 0.0,
       "recall": 0.0,
       "f1_score": 0.0,
       "confusion_matrix": [
         [
-          8544,
+          1347,
           0
         ],
         [
-          1456,
+          253,
           0
         ]
       ],
       "classification_report": {
         "0": {
-          "precision": 0.8544,
+          "precision": 0.841875,
           "recall": 1.0,
-          "f1-score": 0.9214840379637619,
-          "support": 8544.0
+          "f1-score": 0.9141499830335935,
+          "support": 1347.0
         },
         "1": {
           "precision": 0.0,
           "recall": 0.0,
           "f1-score": 0.0,
-          "support": 1456.0
+          "support": 253.0
         },
-        "accuracy": 0.8544,
+        "accuracy": 0.841875,
         "macro avg": {
-          "precision": 0.4272,
+          "precision": 0.4209375,
           "recall": 0.5,
-          "f1-score": 0.46074201898188094,
-          "support": 10000.0
+          "f1-score": 0.45707499151679676,
+          "support": 1600.0
         },
         "weighted avg": {
-          "precision": 0.7299993600000001,
-          "recall": 0.8544,
-          "f1-score": 0.7873159620362381,
-          "support": 10000.0
+          "precision": 0.708753515625,
+          "recall": 0.841875,
+          "f1-score": 0.7696000169664066,
+          "support": 1600.0
         }
       }
     },
@@ -297,7 +187,7 @@
       ],
       "tpr": [
         0.0,
-        0.0027472527472527475,
+        0.003952569169960474,
         1.0
       ],
       "thresholds": [
@@ -305,51 +195,23 @@
         0.5,
         0.0
       ],
-      "auc": 0.5013736263736264
+      "auc": 0.5019762845849802
     }
   },
   "realism_metrics": {
-    "spotting_events": 1,
-    "max_fire_intensity": 262.8334655761719,
-    "mean_flame_length": 0.7310926914215088,
+    "spotting_events": 0,
+    "max_fire_intensity": 36.06749725341797,
+    "mean_flame_length": 0.40325066447257996,
     "fire_behavior_diversity": 0,
     "suppression_effectiveness": 0
   },
   "performance_history": [
     {
       "step": 10,
-      "timestamp": "2025-05-27T23:37:19.010293",
+      "timestamp": "2025-05-27T23:37:15.729464",
       "validation_score": 0.0,
       "realism_score": 0.3,
       "combined_score": 0.15
-    },
-    {
-      "step": 20,
-      "timestamp": "2025-05-27T23:37:19.047348",
-      "validation_score": 0.0,
-      "realism_score": 0.6,
-      "combined_score": 0.3
-    },
-    {
-      "step": 30,
-      "timestamp": "2025-05-27T23:37:19.083359",
-      "validation_score": 0.0,
-      "realism_score": 0.6,
-      "combined_score": 0.3
-    },
-    {
-      "step": 40,
-      "timestamp": "2025-05-27T23:37:19.125293",
-      "validation_score": 0.0,
-      "realism_score": 0.6,
-      "combined_score": 0.3
-    },
-    {
-      "step": 50,
-      "timestamp": "2025-05-27T23:37:19.162426",
-      "validation_score": 0.0,
-      "realism_score": 0.6,
-      "combined_score": 0.3
     }
   ],
   "improvement_suggestions": [
