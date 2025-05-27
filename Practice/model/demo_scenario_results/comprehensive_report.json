@@ -1,0 +1,77 @@
+{
+  "metadata": {
+    "generation_time": "2025-05-27T23:30:30.511802",
+    "simulation_config": {
+      "simulation": {
+        "grid_size": [
+          100,
+          100
+        ],
+        "cell_size": 30.0,
+        "max_steps": 50,
+        "validation_interval": 10
+      },
+      "validation": {
+        "enable_pattern_validation": true,
+        "enable_temporal_validation": true,
+        "enable_fuel_validation": true,
+        "enable_confusion_matrix": true,
+        "enable_roc_analysis": true
+      },
+      "realism": {
+        "enable_spotting": true,
+        "enable_human_influence": true,
+        "enable_suppression": true,
+        "enable_seasonal_effects": true,
+        "max_spot_distance": 1000.0
+      },
+      "output": {
+        "save_intermediate_results": true,
+        "generate_animations": true,
+        "create_detailed_reports": true,
+        "output_directory": "integrated_simulation_results"
+      }
+    },
+    "total_simulation_steps": 50
+  },
+  "simulation_summary": {
+    "total_burned_area": 0,
+    "burn_percentage": 0.0,
+    "total_simulation_steps": 50,
+    "final_fire_size": 2,
+    "fuel_statistics": {
+      "GR1": {
+        "total_cells": 400,
+        "burned_cells": 0,
+        "burn_ratio": 0.0
+      },
+      "GS2": {
+        "total_cells": 400,
+        "burned_cells": 0,
+        "burn_ratio": 0.0
+      },
+      "TL1": {
+        "total_cells": 6800,
+        "burned_cells": 0,
+        "burn_ratio": 0.0
+      },
+      "TL2": {
+        "total_cells": 1200,
+        "burned_cells": 0,
+        "burn_ratio": 0.0
+      },
+      "TL3": {
+        "total_cells": 400,
+        "burned_cells": 0,
+        "burn_ratio": 0.0
+      },
+      "TU2": {
+        "total_cells": 800,
+        "burned_cells": 0,
+        "burn_ratio": 0.0
+      }
+    }
+  },
+  "validation_results": {
+    "spread_pattern": {
+      "total_burned_area": 

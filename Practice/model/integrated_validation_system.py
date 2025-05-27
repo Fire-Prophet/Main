@@ -107,8 +107,12 @@ class IntegratedValidationSystem:
         """모델 컴포넌트들 설정"""
         print("통합 시스템 모델 설정 중...")
         
-        grid_size = tuple(self.config['simulation']['grid_size'])
+        # Use fuel_map shape to determine grid size to avoid mismatches
+        grid_size = fuel_map.shape
         cell_size = self.config['simulation']['cell_size']
+        
+        # Update config to match the actual grid size
+        self.config['simulation']['grid_size'] = list(grid_size)
         
         # CA 모델 설정
         self.ca_model = AdvancedCAFireModel(grid_size)
@@ -430,6 +434,21 @@ class IntegratedValidationSystem:
         self.validation_results = validation_results
         return validation_results
     
+    def _convert_numpy_types(self, obj):
+        """Convert numpy types to JSON serializable types"""
+        if isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+        elif isinstance(obj, dict):
+            return {key: self._convert_numpy_types(value) for key, value in obj.items()}
+        elif isinstance(obj, list):
+            return [self._convert_numpy_types(item) for item in obj]
+        else:
+            return obj
+
     def generate_comprehensive_report(self, output_dir: str = None) -> str:
         """종합 보고서 생성"""
         print("종합 보고서 생성 중...")
@@ -456,7 +475,9 @@ class IntegratedValidationSystem:
         # JSON 보고서 저장
         report_path = os.path.join(output_dir, 'comprehensive_report.json')
         with open(report_path, 'w', encoding='utf-8') as f:
-            json.dump(report_data, f, indent=2, ensure_ascii=False)
+            # Convert numpy types to JSON serializable types
+            serializable_data = self._convert_numpy_types(report_data)
+            json.dump(serializable_data, f, indent=2, ensure_ascii=False)
         
         # 시각화 생성
         if self.config['output']['create_detailed_reports']:
