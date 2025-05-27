@@ -126,8 +126,11 @@ class IntegratedValidationSystem:
         
         # 지형 모델 설정
         if elevation_map is not None:
-            self.terrain_model = TopographicFireModel()
-            self.terrain_model.load_dem_data(elevation_map)
+            from terrain_model import TerrainModel
+            terrain_base = TerrainModel()
+            terrain_base.elevation = elevation_map
+            terrain_base.calculate_terrain_derivatives()
+            self.terrain_model = TopographicFireModel(terrain_base)
         
         # 인간 활동 데이터 설정
         if human_activity_data:
