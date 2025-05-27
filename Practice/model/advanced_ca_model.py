@@ -30,6 +30,7 @@ class AdvancedCAModel:
         seed: 랜덤 시드
         """
         self.grid_shape = grid_shape
+        self.height, self.width = grid_shape  # Add height and width attributes for compatibility
         self.neighborhood = neighborhood
         self.rng = np.random.default_rng(seed)
         
