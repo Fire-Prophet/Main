@@ -4,6 +4,7 @@ Moore 이웃, 확률적 소화, 다중 점화, 현실적 규칙 구현
 """
 
 import numpy as np
+from scipy import ndimage
 import matplotlib.pyplot as plt
 from pathlib import Path
 from datetime import datetime
@@ -284,6 +285,23 @@ class AdvancedCAModel:
         
         return stats
     
+    def _apply_fire_rules(self, input_grid: np.ndarray) -> np.ndarray:
+        """주어진 격자에 화재 규칙 적용 (호환성 메서드)"""
+        # 현재 상태 저장
+        old_grid = self.grid.copy()
+        
+        # 입력 격자 설정
+        self.grid = input_grid.copy()
+        
+        # 한 스텝 적용
+        self.step()
+        
+        # 결과 가져오기 및 상태 복원
+        result = self.grid.copy()
+        self.grid = old_grid
+        
+        return result
+
     def calculate_statistics(self) -> Dict:
         """현재 상태 통계 계산"""
         total_cells = self.grid.size
@@ -425,3 +443,6 @@ if __name__ == '__main__':
     ca_model.save_state('advanced_ca_simulation.json')
     
     print("고급 CA 시뮬레이션 완료!")
+
+# Backward compatibility alias
+AdvancedCAFireModel = AdvancedCAModel
