@@ -13,3 +13,7 @@ pytorch-lightning
 scikit-learn
 folium
 cartopy
+matplotlib
+seaborn
+scipy
+pandas
