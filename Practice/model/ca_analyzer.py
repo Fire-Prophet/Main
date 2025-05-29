@@ -374,7 +374,8 @@ class CAAnalyzer:
         print(f"분석 데이터 저장 완료:")
         print(f"  CSV: {csv_path}")
         print(f"  Excel: {excel_path}")
-
+        
+# This is another comment for a new commit.
 if __name__ == '__main__':
     # 사용 예시
     analyzer = CAAnalyzer('ca_results')
