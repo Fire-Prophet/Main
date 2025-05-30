@@ -1,3 +1,9 @@
+storunst_map = {
+    "1": "입목지",
+    "2": "무립목지",
+    "0": "비산림"
+}
+
 forest_type_map = {
     "0":"비산림/무립목지","1":"침엽수림","2":"활엽수림","3":"혼효림","4":"죽림"
 }
@@ -102,11 +108,50 @@ height_class_map = {
     "40": "임분고 39m 이상"
 }
 
+# 1) 코드 문자열 통일
+gdf['STORUNST_CD'] = gdf['STORUNST_CD'].astype(str).str.zfill(1)
+gdf['HEIGT_CD'] = gdf['HEIGT_CD'].astype(str).str.zfill(2)
 
-# 매핑 적용 예시
+# 2) 기본 맵핑 + 결측치 처리
+gdf['Storunst'] = gdf['STORUNST_CD'].map(storunst_map).fillna('알수없음')
 gdf["ForestType"] = gdf["FRTP_CD"].map(forest_type_map)
-gdf["Species"]    = gdf["KOFTR_GROU_CD"].map(species_group_map)
-gdf["DiaClass"]   = gdf["DMCLS_CD"].map(diameter_class_map)
+gdf["Species"] = gdf["KOFTR_GROU_CD"].map(species_group_map)
+gdf["DiaClass"] = gdf["DMCLS_CD"].map(diameter_class_map)
 gdf["AgeClass"] = gdf["AGCLS_CD"].map(age_class_map)
 gdf["Density"] = gdf["DNST_CD"].map(density_code_map)
 gdf["HeightClass"] = gdf["HEIGT_CD"].map(height_class_map)
+
+# 3) np.select 기반 Anderson13 벡터화 매핑
+import numpy as np
+
+conds = [
+    (gdf['STORUNST_CD'].isin(['0','2'])) | (gdf['FRTP_CD']=='0'),
+    (gdf['STORUNST_CD']=='1') & (gdf['FRTP_CD']=='1') & (gdf['DNST_CD']=='C') & (gdf['HEIGT_CD'].astype(int) >= 20),
+    (gdf['STORUNST_CD']=='1') & (gdf['FRTP_CD']=='1') & (gdf['DNST_CD'].isin(['B','C'])),
+    (gdf['STORUNST_CD']=='1') & (gdf['FRTP_CD']=='1'),
+    (gdf['STORUNST_CD']=='1') & (gdf['FRTP_CD']=='2') & (gdf['DNST_CD']=='C') & (gdf['HEIGT_CD'].astype(int) >= 20),
+    (gdf['STORUNST_CD']=='1') & (gdf['FRTP_CD']=='2') & (gdf['DNST_CD'].isin(['B','C'])),
+    (gdf['STORUNST_CD']=='1') & (gdf['FRTP_CD']=='2'),
+    (gdf['STORUNST_CD']=='1') & (gdf['FRTP_CD']=='3') & (gdf['DNST_CD']=='C'),
+    (gdf['STORUNST_CD']=='1') & (gdf['FRTP_CD']=='3'),
+    (gdf['STORUNST_CD']=='1') & (gdf['FRTP_CD']=='4'),
+    (gdf['KOFTR_GROU_CD']=='92'),
+    (gdf['KOFTR_GROU_CD']=='83'),
+    (gdf['KOFTR_GROU_CD'].isin(['91','93','94','95','99'])),
+]
+choices = [
+    'NB1',  # 비산림/무립목지
+    'TU1',  # 침엽수림, 밀도 높고 키 큼
+    'TU2',  # 침엽수림, 밀도 중/높음
+    'TL1',  # 침엽수림, 그 외
+    'TU3',  # 활엽수림, 밀도 높고 키 큼
+    'TU4',  # 활엽수림, 밀도 중/높음
+    'TL2',  # 활엽수림, 그 외
+    'TU5',  # 혼효림, 밀도 높음
+    'TL3',  # 혼효림, 그 외
+    'GS1',  # 죽림
+    'GR1',  # 초지
+    'SH1',  # 관목덤불
+    'NB1',  # 기타 비산림
+]
+gdf['Anderson13_FuelModel'] = np.select(conds, choices, default='TL1')
