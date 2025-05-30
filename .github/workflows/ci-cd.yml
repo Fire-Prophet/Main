@@ -1,0 +1,266 @@
+name: Fire Simulation CI/CD
+
+on:
+  push:
+    branches: [ main, develop, ljh_* ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    # 매일 새벽 2시에 자동 테스트 실행
+    - cron: '0 2 * * *'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.8, 3.9, '3.10', 3.11]
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+    
+    - name: Cache pip dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+    
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y gdal-bin libgdal-dev
+        sudo apt-get install -y python3-tk  # matplotlib backend
+    
+    - name: Install Python dependencies
+      working-directory: Practice/model
+      run: |
+        python -m pip install --upgrade pip
+        pip install flake8 pytest pytest-cov black isort
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+    
+    - name: Lint with flake8
+      working-directory: Practice/model
+      run: |
+        # stop the build if there are Python syntax errors or undefined names
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+    
+    - name: Check code formatting with black
+      working-directory: Practice/model
+      run: |
+        black --check --diff .
+    
+    - name: Check import sorting with isort
+      working-directory: Practice/model
+      run: |
+        isort --check-only --diff .
+    
+    - name: Run unit tests
+      working-directory: Practice/model
+      run: |
+        python -m pytest test_suite.py -v --cov=. --cov-report=xml
+    
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: Practice/model/coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: false
+
+  performance-test:
+    runs-on: ubuntu-latest
+    needs: test
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+    
+    - name: Install dependencies
+      working-directory: Practice/model
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install memory-profiler psutil
+    
+    - name: Run performance benchmarks
+      working-directory: Practice/model
+      run: |
+        python -c "
+        import time
+        import numpy as np
+        from ca_base import CellularAutomaton
+        
+        # 성능 벤치마크
+        print('Performance Benchmark Results:')
+        print('=' * 40)
+        
+        grid_sizes = [(50, 50), (100, 100), (200, 200)]
+        for size in grid_sizes:
+            ca = CellularAutomaton(grid_size=size)
+            ca.ignite([(size[0]//2, size[1]//2)])
+            
+            start_time = time.time()
+            for _ in range(10):
+                ca.step()
+            end_time = time.time()
+            
+            elapsed = end_time - start_time
+            print(f'Grid {size}: {elapsed:.2f}s for 10 steps')
+            
+            # 성능 기준: 100x100 격자에서 10 스텝이 2초 이내
+            if size == (100, 100) and elapsed > 2.0:
+                raise RuntimeError(f'Performance regression: {elapsed:.2f}s > 2.0s')
+        "
+
+  integration-test:
+    runs-on: ubuntu-latest
+    needs: test
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+    
+    - name: Install dependencies
+      working-directory: Practice/model
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    - name: Run integration test
+      working-directory: Practice/model
+      run: |
+        python test_integrated_system.py
+    
+    - name: Upload test artifacts
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: test-results
+        path: Practice/model/test_results/
+
+  build-docs:
+    runs-on: ubuntu-latest
+    needs: test
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+    
+    - name: Install dependencies
+      working-directory: Practice/model
+      run: |
+        python -m pip install --upgrade pip
+        pip install sphinx sphinx-rtd-theme
+        pip install -r requirements.txt
+    
+    - name: Generate API documentation
+      working-directory: Practice/model
+      run: |
+        mkdir -p docs
+        python -c "
+        import inspect
+        import importlib
+        import os
+        
+        modules = ['ca_base', 'model_validation', 'realistic_fire_model', 'integrated_validation_system']
+        
+        with open('docs/API.md', 'w', encoding='utf-8') as f:
+            f.write('# Fire Simulation API Documentation\\n\\n')
+            
+            for module_name in modules:
+                try:
+                    module = importlib.import_module(module_name)
+                    f.write(f'## {module_name}\\n\\n')
+                    
+                    for name, obj in inspect.getmembers(module):
+                        if inspect.isclass(obj) and obj.__module__ == module_name:
+                            f.write(f'### {name}\\n\\n')
+                            if obj.__doc__:
+                                f.write(f'{obj.__doc__}\\n\\n')
+                            
+                            # 메서드 문서화
+                            for method_name, method in inspect.getmembers(obj):
+                                if inspect.ismethod(method) or inspect.isfunction(method):
+                                    if not method_name.startswith('_'):
+                                        f.write(f'#### {method_name}\\n\\n')
+                                        if method.__doc__:
+                                            f.write(f'{method.__doc__}\\n\\n')
+                except ImportError as e:
+                    f.write(f'Could not import {module_name}: {e}\\n\\n')
+        
+        print('API documentation generated successfully')
+        "
+    
+    - name: Upload documentation
+      uses: actions/upload-artifact@v3
+      with:
+        name: documentation
+        path: Practice/model/docs/
+
+  security-scan:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Run security scan with bandit
+      working-directory: Practice/model
+      run: |
+        pip install bandit
+        bandit -r . -f json -o bandit-report.json || true
+    
+    - name: Upload security report
+      uses: actions/upload-artifact@v3
+      with:
+        name: security-report
+        path: Practice/model/bandit-report.json
+
+  release:
+    runs-on: ubuntu-latest
+    needs: [test, performance-test, integration-test]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: Generate changelog
+      run: |
+        echo "# Changelog" > CHANGELOG.md
+        echo "" >> CHANGELOG.md
+        echo "## $(date +%Y-%m-%d)" >> CHANGELOG.md
+        echo "" >> CHANGELOG.md
+        git log --oneline --since="1 week ago" >> CHANGELOG.md
+    
+    - name: Create Release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: v${{ github.run_number }}
+        release_name: Release v${{ github.run_number }}
+        body_path: CHANGELOG.md
+        draft: false
+        prerelease: false
