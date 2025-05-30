@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>판타지 퀴즈</title>
+<style>
+  body { font-family: 'Malgun Gothic', sans-serif; background-color: #f0f0f0; color: #333; }
+  #quiz-container { background-color: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); max-width: 600px; margin: 50px auto; }
+  h1 { text-align: center; color: #5a3e2b; }
+  #quiz { margin-bottom: 20px; }
+  .question { margin-bottom: 15px; font-weight: bold; font-size: 1.2em; }
+  .options button { 
+      display: block; width: 100%; padding: 10px; margin-bottom: 5px; 
+      border: 1px solid #ccc; border-radius: 4px; background-color: #eee; 
+      cursor: pointer; font-size: 1em; transition: background-color 0.2s;
+  }
+  .options button:hover:not(:disabled) { background-color: #ddd; }
+  .options button:disabled { cursor: not-allowed; }
+  .options button.correct { background-color: #90ee90; border-color: #5cb85c; }
+  .options button.wrong { background-color: #f08080; border-color: #d9534f; }
+  #feedback { margin-top: 15px; font-weight: bold; text-align: center; }
+  #nextBtn { 
+      display: block; width: 100px; padding: 10px; margin: 20px auto 0;
+      border: none; border-radius: 4px; background-color: #5a3e2b; 
+      color: white; font-size: 1em; cursor: pointer;
+  }
+  #nextBtn:disabled { background-color: #aaa; }
+</style>
+</head>
+<body>
+
+<div id="quiz-container">
+    <h1>판타지 퀴즈</h1>
+    <div id="quiz"></div>
+    <div id="feedback"></div>
+    <button id="nextBtn" onclick="nextQuestion()" disabled>다음 문제</button>
+    <div id="result"></div>
+</div>
+
+<script>
+const quizData = [
+    {
+        question: "가장 흔하지만, 가장 큰 잠재력을 가진 종족은?",
+        options: ["엘프", "드워프", "인간", "오크"],
+        answer: "인간"
+    },
+    {
+        question: "잃어버린 기억을 가진 불사자 기사의 주된 목표는?",
+        options: ["세계 정복", "복수", "정체성 찾기", "부의 축적"],
+        answer: "정체성 찾기"
+    },
+    {
+        question: "고대 용과 계약하여 마법을 사용하는 직업은?",
+        options: ["성기사", "용기사", "흑마법사", "정령사"],
+        answer: "용기사"
+    },
+    {
+        question: "중세 판타지에서 가장 중요한 자원은?",
+        options: ["금", "마나석", "강철", "이야기"],
+        answer: "이야기" // 사용자 설정 기반
+    }
+];
+
+let currentQuestionIndex = 0;
+let score = 0;
+
+const quizDiv = document.getElementById('quiz');
+const feedbackDiv = document.getElementById('feedback');
+const resultDiv = document.getElementById('result');
+const nextBtn = document.getElementById('nextBtn');
+
+function loadQuiz() {
+    if (currentQuestionIndex < quizData.length) {
+        const currentQuiz = quizData[currentQuestionIndex];
+        quizDiv.innerHTML = `
+            <div class="question">${currentQuestionIndex + 1}. ${currentQuiz.question}</div>
+            <div class="options">
+                ${currentQuiz.options.map(option => 
+                    `<button class="option-btn" onclick="checkAnswer(this, '${option}')">${option}</button>`
+                ).join('')}
+            </div>
+        `;
+        feedbackDiv.innerHTML = '';
+        nextBtn.disabled = true;
+        resultDiv.innerHTML = '';
+    } else {
+        quizDiv.innerHTML = `<h2>퀴즈 완료!</h2> <p>총 ${quizData.length}문제 중 ${score}문제를 맞혔습니다.</p>`;
+        feedbackDiv.innerHTML = '';
+        nextBtn.style.display = 'none'; // 마지막 문제 후 버튼 숨김
+    }
+}
+
+function checkAnswer(buttonElement, selectedOption) {
+    const currentQuiz = quizData[currentQuestionIndex];
+    const buttons = document.querySelectorAll('.option-btn');
+    
+    buttons.forEach(btn => {
+        btn.disabled = true; // 모든 버튼 비활성화
+        if (btn.innerText === currentQuiz.answer) {
+            btn.classList.add('correct'); // 정답 버튼 표시
+        }
+    });
+
+    if (selectedOption === currentQuiz.answer) {
+        score++;
+        feedbackDiv.innerHTML = "정답입니다!";
+        feedbackDiv.style.color = 'green';
+        buttonElement.classList.add('correct');
+    } else {
+        feedbackDiv.innerHTML = `오답입니다. 정답은 '${currentQuiz.answer}'입니다.`;
+        feedbackDiv.style.color = 'red';
+        buttonElement.classList.add('wrong');
+    }
+    
+    nextBtn.disabled = false; // 다음 버튼 활성화
+}
+
+function nextQuestion() {
+    currentQuestionIndex++;
+    loadQuiz();
+}
+
+// 퀴즈 시작
+loadQuiz();
+</script>
+
+</body>
+</html>

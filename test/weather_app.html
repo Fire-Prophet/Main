@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>날씨 앱</title>
+    <meta charset="UTF-8">
+</head>
+<body>
+    <h1>날씨 정보</h1>
+    <input id="city" placeholder="도시 이름 입력 (예: Seoul)">
+    <button onclick="getWeather()">날씨 확인</button>
+    <div id="weather">
+        <p>도시를 입력하고 버튼을 누르세요.</p>
+    </div>
+
+    <script>
+        function getWeather() {
+            const apiKey = 'YOUR_API_KEY'; // OpenWeatherMap API 키를 여기에 입력하세요.
+            const cityInput = document.getElementById('city');
+            const weatherDiv = document.getElementById('weather');
+            const city = cityInput.value;
+
+            if (!city) {
+                weatherDiv.innerHTML = "도시 이름을 입력하세요.";
+                return;
+            }
+
+            const apiUrl = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric&lang=kr`;
+
+            fetch(apiUrl)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.cod === 200) {
+                        weatherDiv.innerHTML = `
+                            <h2>${data.name} (${data.sys.country})</h2>
+                            <p>온도: ${data.main.temp}°C (체감: ${data.main.feels_like}°C)</p>
+                            <p>날씨: ${data.weather[0].description}</p>
+                            <p>습도: ${data.main.humidity}%</p>
+                            <p>풍속: ${data.wind.speed} m/s</p>
+                        `;
+                    } else {
+                        weatherDiv.innerHTML = `날씨 정보를 가져올 수 없습니다: ${data.message}`;
+                    }
+                })
+                .catch(error => {
+                    console.error('Fetch Error:', error);
+                    weatherDiv.innerHTML = `오류 발생: 도시 이름을 확인하거나 API 키를 확인하세요. (${error.message})`;
+                });
+        }
+    </script>
+</body>
+</html>

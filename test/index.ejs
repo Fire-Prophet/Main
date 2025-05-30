@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>나의 이야기</title>
+    <meta charset="UTF-8">
+</head>
+<body>
+    <h1>나의 이야기</h1>
+    <a href="/new">새로운 이야기 작성</a>
+    <hr>
+    <% posts.forEach(post => { %>
+        <article>
+            <h2><%= post.title %></h2>
+            <p><%= post.content %></p>
+        </article>
+        <hr>
+    <% }); %>
+</body>
+</html>
