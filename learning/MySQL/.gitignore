@@ -1,0 +1,10 @@
+# .gitignore
+
+# Node.js dependencies
+node_modules/
+
+# Environment variables file
+.env
+
+# Optional: Log files, build outputs, etc.
+*.log
