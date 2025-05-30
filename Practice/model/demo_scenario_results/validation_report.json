@@ -1,0 +1,247 @@
+{
+  "validation_timestamp": "2025-05-27T23:42:13.536660",
+  "metrics": {
+    "spread_pattern": {
+      "total_burned_area": 0,
+      "burn_ratio": 0.0,
+      "compactness": 0.0,
+      "circularity": 0.0,
+      "fractal_dimension": null,
+      "jaccard_similarity": 0.0,
+      "area_error_ratio": 1.0,
+      "predicted_area": 0,
+      "actual_area": 1491,
+      "intersection_area": 0,
+      "union_area": 1491
+    },
+    "temporal_progression": {
+      "burn_rate_progression": {
+        "rates": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "mean_rate": 0.0,
+        "max_rate": 0.0,
+        "min_rate": 0.0,
+        "rate_variance": 0.0,
+        "acceleration": 0.0
+      },
+      "perimeter_growth": {
+        "growth_rates": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          8,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          8,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "mean_growth": 0.32653061224489793,
+        "max_growth": 8.0,
+        "min_growth": 0.0
+      },
+      "acceleration_phases": {
+        "phases": [],
+        "acceleration_periods": 0,
+        "total_acceleration_steps": 0
+      },
+      "growth_consistency": 0.0
+    },
+    "fuel_response": {
+      "GR1": {
+        "total_cells": 400,
+        "burned_cells": 0,
+        "burn_ratio": 0.0
+      },
+      "GS2": {
+        "total_cells": 400,
+        "burned_cells": 0,
+        "burn_ratio": 0.0
+      },
+      "TL1": {
+        "total_cells": 6800,
+        "burned_cells": 0,
+        "burn_ratio": 0.0
+      },
+      "TL2": {
+        "total_cells": 1200,
+        "burned_cells": 0,
+        "burn_ratio": 0.0
+      },
+      "TL3": {
+        "total_cells": 400,
+        "burned_cells": 0,
+        "burn_ratio": 0.0
+      },
+      "TU2": {
+        "total_cells": 800,
+        "burned_cells": 0,
+        "burn_ratio": 0.0
+      },
+      "statistics": {
+        "mean_burn_rate": 0.0,
+        "std_burn_rate": 0.0,
+        "max_burn_rate": 0.0,
+        "min_burn_rate": 0.0
+      }
+    },
+    "confusion_matrix": {
+      "accuracy": 0.8509,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1_score": 0.0,
+      "confusion_matrix": [
+        [
+          8509,
+          0
+        ],
+        [
+          1491,
+          0
+        ]
+      ],
+      "classification_report": {
+        "0": {
+          "precision": 0.8509,
+          "recall": 1.0,
+          "f1-score": 0.9194445945215841,
+          "support": 8509.0
+        },
+        "1": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1-score": 0.0,
+          "support": 1491.0
+        },
+        "accuracy": 0.8509,
+        "macro avg": {
+          "precision": 0.42545,
+          "recall": 0.5,
+          "f1-score": 0.45972229726079206,
+          "support": 10000.0
+        },
+        "weighted avg": {
+          "precision": 0.72403081,
+          "recall": 0.8509,
+          "f1-score": 0.782355405478416,
+          "support": 10000.0
+        }
+      }
+    },
+    "roc_metrics": {
+      "fpr": [
+        0.0,
+        0.0001175226231049477,
+        1.0
+      ],
+      "tpr": [
+        0.0,
+        0.002012072434607646,
+        1.0
+      ],
+      "thresholds": [
+        1e+308,
+        0.5,
+        0.0
+      ],
+      "auc": 0.5009472749057513
+    }
+  },
+  "summary": {
+    "total_metrics": 5,
+    "validation_score": 0.0,
+    "recommendations": [
+      "모델 파라미터 조정 필요",
+      "연료 타입별 확산 확률 재검토"
+    ]
+  }
+}
