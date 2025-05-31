@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>반응형 내비게이션 바</title>
+    <style>
+        /* 기본 스타일 */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background-color: #f4f4f4;
+        }
+
+        .navbar {
+            background-color: #333;
+            overflow: hidden;
+            position: sticky; /* 스크롤 시 상단에 고정 */
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+        }
+
+        .navbar a {
+            float: left;
+            display: block;
+            color: white;
+            text-align: center;
+            padding: 14px 20px;
+            text-decoration: none;
+            transition: background-color 0.3s ease;
+        }
+
+        .navbar a:hover {
+            background-color: #575757;
+        }
+
+        .navbar .icon {
+            display: none; /* 모바일에서만 보이도록 기본 숨김 */
+        }
+
+        /* 반응형 디자인: 작은 화면 */
+        @media screen and (max-width: 600px) {
+            .navbar a:not(:first-child) { /* 첫 번째 링크(로고 등)를 제외한 모든 링크 숨김 */
+                display: none;
+            }
+            .navbar a.icon { /* 햄버거 아이콘 표시 */
+                float: right;
+                display: block;
+            }
+            .navbar.responsive {
+                position: relative;
+            }
+            .navbar.responsive .icon {
+                position: absolute;
+                right: 0;
+                top: 0;
+            }
+            .navbar.responsive a {
+                float: none;
+                display: block;
+                text-align: left;
+            }
+        }
+
+        /* 메인 콘텐츠 스타일 */
+        .content {
+            padding: 20px;
+            margin-top: 50px; /* 고정된 내비게이션 바 아래에 콘텐츠가 시작되도록 */
+        }
+
+        .content h1 {
+            color: #333;
+        }
+
+        .content p {
+            line-height: 1.6;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="navbar" id="myNavbar">
+        <a href="#home" class="active">홈</a>
+        <a href="#news">뉴스</a>
+        <a href="#contact">연락처</a>
+        <a href="#about">소개</a>
+        <a href="javascript:void(0);" class="icon" onclick="toggleNavbar()">
+            &#9776; </a>
+    </div>
+
+    <div class="content">
+        <h1>환영합니다!</h1>
+        <p>이 페이지는 간단한 반응형 내비게이션 바의 예시를 보여줍니다. 브라우저 창의 크기를 줄여보세요. 600px 이하로 줄어들면 내비게이션 링크가 사라지고 햄버거 아이콘이 나타납니다.</p>
+        <p>햄버거 아이콘을 클릭하면 숨겨진 내비게이션 링크들이 다시 나타납니다. 이는 모바일 장치에서 사용자 경험을 개선하는 일반적인 방법입니다.</p>
+        <p>추가적인 콘텐츠를 여기에 삽입할 수 있습니다. 예를 들어, 이미지 갤러리, 텍스트 블록, 비디오 등이 될 수 있습니다.</p>
+        <p>스크롤을 해보면 내비게이션 바가 항상 상단에 고정되어 있는 것을 확인할 수 있습니다. `position: sticky` 속성을 사용하여 이 기능을 구현했습니다.</p>
+        <br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
+        <p>페이지 하단 콘텐츠.</p>
+    </div>
+
+    <script>
+        function toggleNavbar() {
+            var x = document.getElementById("myNavbar");
+            if (x.className === "navbar") {
+                x.className += " responsive"; // responsive 클래스 추가
+            } else {
+                x.className = "navbar"; // responsive 클래스 제거
+            }
+        }
+    </script>
+
+</body>
+</html>
