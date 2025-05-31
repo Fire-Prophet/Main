@@ -6,6 +6,13 @@ PostgreSQL 연결 사용 예제
 from db_connection import PostgreSQLConnection
 import os
 
+def format_table_name(table_name):
+    """테이블 이름을 PostgreSQL 쿼리에 적합한 형태로 포맷팅"""
+    # 대문자나 특수문자가 포함된 경우 따옴표로 감싸기
+    if any(c.isupper() or not c.isalnum() and c != '_' for c in table_name):
+        return f'"{table_name}"'
+    return table_name
+
 def example_basic_usage():
     """기본 사용법 예제"""
     print("=== PostgreSQL 기본 연결 예제 ===")
@@ -245,7 +252,8 @@ def analyze_all_tables_brief(db, table_names):
         
         # 레코드 수 조회
         try:
-            count_query = f"SELECT COUNT(*) as record_count FROM \"{table_name}\""
+            formatted_name = format_table_name(table_name)
+            count_query = f"SELECT COUNT(*) as record_count FROM {formatted_name}"
             count_result = db.execute_query(count_query)
             record_count = count_result[0]['record_count'] if count_result else 0
             print(f"   📊 레코드 수: {record_count:,}")
@@ -276,14 +284,16 @@ def analyze_single_table_detailed(db, table_name):
     """단일 테이블 상세 분석"""
     print(f"\n=== 테이블 '{table_name}' 상세 분석 ===")
     
+    formatted_name = format_table_name(table_name)
+    
     try:
         # 1. 기본 테이블 정보
         print("\n1. 기본 정보:")
         basic_info_query = f"""
         SELECT 
-            pg_size_pretty(pg_total_relation_size('{table_name}')) as total_size,
-            pg_size_pretty(pg_relation_size('{table_name}')) as table_size,
-            pg_size_pretty(pg_total_relation_size('{table_name}') - pg_relation_size('{table_name}')) as index_size
+            pg_size_pretty(pg_total_relation_size({formatted_name})) as total_size,
+            pg_size_pretty(pg_relation_size({formatted_name})) as table_size,
+            pg_size_pretty(pg_total_relation_size({formatted_name}) - pg_relation_size({formatted_name})) as index_size
         """
         
         size_info = db.execute_query(basic_info_query)
@@ -294,7 +304,7 @@ def analyze_single_table_detailed(db, table_name):
             print(f"   📊 인덱스 크기: {info['index_size']}")
         
         # 2. 레코드 수
-        count_query = f"SELECT COUNT(*) as record_count FROM \"{table_name}\""
+        count_query = f"SELECT COUNT(*) as record_count FROM {formatted_name}"
         count_result = db.execute_query(count_query)
         record_count = count_result[0]['record_count'] if count_result else 0
         print(f"   📊 레코드 수: {record_count:,}")
@@ -340,7 +350,7 @@ def analyze_single_table_detailed(db, table_name):
             contype as constraint_type,
             pg_get_constraintdef(oid) as constraint_definition
         FROM pg_constraint 
-        WHERE conrelid = '{table_name}'::regclass
+        WHERE conrelid = {formatted_name}::regclass
         ORDER BY contype, conname
         """
         
@@ -390,7 +400,7 @@ def analyze_single_table_detailed(db, table_name):
                     ST_YMin(ST_Extent({geom['geom_column']})) as min_y,
                     ST_XMax(ST_Extent({geom['geom_column']})) as max_x,
                     ST_YMax(ST_Extent({geom['geom_column']})) as max_y
-                FROM "{table_name}"
+                FROM {formatted_name}
                 WHERE {geom['geom_column']} IS NOT NULL
                 """
                 
@@ -406,7 +416,7 @@ def analyze_single_table_detailed(db, table_name):
         # 7. 샘플 데이터 미리보기
         print("\n6. 샘플 데이터 미리보기 (상위 3개 레코드):")
         if record_count > 0:
-            sample_query = f'SELECT * FROM "{table_name}" LIMIT 3'
+            sample_query = f'SELECT * FROM {formatted_name} LIMIT 3'
             sample_data = db.execute_query(sample_query)
             
             if sample_data:
@@ -441,7 +451,7 @@ def example_table_statistics():
         db_stats_query = """
         SELECT 
             COUNT(*) as total_tables,
-            SUM(pg_total_relation_size(schemaname||'.'||tablename)) as total_size
+            SUM(pg_total_relation_size('"' || tablename || '"')) as total_size
         FROM pg_tables 
         WHERE schemaname = 'public'
         """
@@ -462,12 +472,12 @@ def example_table_statistics():
         size_ranking_query = """
         SELECT 
             tablename,
-            pg_size_pretty(pg_total_relation_size(schemaname||'.'||tablename)) as total_size,
-            pg_size_pretty(pg_relation_size(schemaname||'.'||tablename)) as table_size,
-            pg_total_relation_size(schemaname||'.'||tablename) as size_bytes
+            pg_size_pretty(pg_total_relation_size('"' || tablename || '"')) as total_size,
+            pg_size_pretty(pg_relation_size('"' || tablename || '"')) as table_size,
+            pg_total_relation_size('"' || tablename || '"') as size_bytes
         FROM pg_tables 
         WHERE schemaname = 'public'
-        ORDER BY pg_total_relation_size(schemaname||'.'||tablename) DESC
+        ORDER BY pg_total_relation_size('"' || tablename || '"') DESC
         LIMIT 10
         """
         
