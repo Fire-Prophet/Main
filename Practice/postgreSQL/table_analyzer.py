@@ -398,8 +398,28 @@ def main():
                     
                     save_choice = input("\n분석 결과를 파일로 저장하시겠습니까? (y/n): ").lower().strip()
                     if save_choice in ['y', 'yes', '예']:
-                        # JSON 형태로 저장 로직 추가 가능
-                        print(f"💾 분석 결과가 저장되었습니다: {selected_table}_analysis.txt")
+                        try:
+                            from data_exporter import PostgreSQLDataExporter
+                            exporter = PostgreSQLDataExporter()
+                            exporter.db = analyzer.db  # 기존 연결 재사용
+                            
+                            # 분석 데이터 수집
+                            analysis_data = {
+                                'basic_info': analyzer.get_all_tables(),
+                                'columns': analyzer.get_table_columns_detailed(selected_table),
+                                'indexes': analyzer.get_table_indexes(selected_table),
+                                'constraints': analyzer.get_table_constraints(selected_table),
+                                'spatial_info': analyzer.get_spatial_info(selected_table)
+                            }
+                            
+                            # 파일로 저장
+                            saved_file = exporter.export_analysis_report(selected_table, analysis_data)
+                            if saved_file:
+                                print(f"💾 분석 결과가 저장되었습니다: {saved_file}")
+                        except ImportError:
+                            print("⚠️  데이터 내보내기 모듈을 찾을 수 없습니다.")
+                        except Exception as e:
+                            print(f"❌ 파일 저장 실패: {e}")
                 else:
                     print("❌ 잘못된 번호입니다.")
                     
