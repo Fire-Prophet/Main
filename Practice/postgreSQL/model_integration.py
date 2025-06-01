@@ -5,6 +5,7 @@ PostgreSQL 데이터와 화재 시뮬레이션 모델 연동 모듈
 """
 
 import numpy as np
+import pandas as pd
 import sys
 import os
 from pathlib import Path
