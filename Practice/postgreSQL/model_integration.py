@@ -259,7 +259,12 @@ class PostgreSQLModelIntegrator:
                  column_name ILIKE '%forest%' OR 
                  column_name ILIKE '%vegetation%' OR
                  column_name ILIKE '%storunst%' OR
-                 column_name ILIKE '%frtp%')
+                 column_name ILIKE '%frtp%' OR
+                 column_name ILIKE '%임상%' OR
+                 column_name ILIKE '%수종%' OR
+                 column_name ILIKE '%tree%' OR
+                 column_name ILIKE '%wood%' OR
+                 column_name ILIKE '%landcover%')
             """
             fuel_columns = self.db.execute_query(columns_query)
             
