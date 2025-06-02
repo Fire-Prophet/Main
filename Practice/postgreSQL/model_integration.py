@@ -674,6 +674,21 @@ class PostgreSQLModelIntegrator:
             'model': fire_model
         }
     
+    def _convert_numpy_types(self, obj):
+        """NumPy 타입을 Python 기본 타입으로 변환하여 JSON 직렬화 가능하게 만듦"""
+        if isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+        elif isinstance(obj, dict):
+            return {key: self._convert_numpy_types(value) for key, value in obj.items()}
+        elif isinstance(obj, list):
+            return [self._convert_numpy_types(item) for item in obj]
+        else:
+            return obj
+
     def _save_simulation_results(self, table_name: str, results: Dict):
         """
         시뮬레이션 결과 저장
@@ -732,15 +747,15 @@ class PostgreSQLModelIntegrator:
         # JSON 결과 저장
         results_file = f"exports/fire_simulation_{table_name}_{timestamp}.json"
         
-        # NumPy 배열을 리스트로 변환
-        save_results = {
+        # NumPy 타입들을 Python 기본 타입으로 변환
+        save_results = self._convert_numpy_types({
             'source_table': table_name,
             'timestamp': timestamp,
             'steps': results['steps'],
             'statistics': results['statistics'],
             'final_stats': results['final_stats'],
-            'final_state': results['final_state'].tolist() if results['final_state'] is not None else None
-        }
+            'final_state': results['final_state'] if results['final_state'] is not None else None
+        })
         
         with open(results_file, 'w', encoding='utf-8') as f:
             json.dump(save_results, f, ensure_ascii=False, indent=2)
