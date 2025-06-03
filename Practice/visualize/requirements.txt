@@ -16,10 +16,16 @@ seaborn>=0.11.0
 
 # Web Framework for Dashboard
 streamlit>=1.15.0
+streamlit-folium>=0.25.0
 
 # Data Processing and I/O
 python-dateutil>=2.8.0
 pytz>=2021.3
+
+# Database Connectivity
+psycopg2-binary>=2.9.0
+sqlalchemy>=1.4.0
+python-dotenv>=0.19.0
 
 # Optional: Enhanced Geospatial Support
 # contextily>=1.2.0  # For basemap tiles
