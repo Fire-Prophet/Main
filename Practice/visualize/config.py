@@ -3,12 +3,182 @@ Configuration settings for the fire simulation visualization system.
 """
 
 import os
+import json
+from typing import Dict, Any, Optional
 
 # Base directories
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 EXPORTS_DIR = os.path.join(BASE_DIR, 'postgreSQL', 'exports')
 STATIC_DIR = os.path.join(os.path.dirname(__file__), 'static')
 TEMPLATES_DIR = os.path.join(os.path.dirname(__file__), 'templates')
+
+
+class VisualizationConfig:
+    """시각화 설정 관리 클래스"""
+    
+    def __init__(self, config_path: Optional[str] = None):
+        """
+        Args:
+            config_path: 설정 파일 경로 (선택사항)
+        """
+        self.config_path = config_path
+        self.config = self._load_default_config()
+        
+        if config_path and os.path.exists(config_path):
+            self._load_config_file(config_path)
+    
+    def _load_default_config(self) -> Dict[str, Any]:
+        """기본 설정 로드"""
+        return {
+            'map': {
+                'default_center': [37.5665, 126.9780],
+                'default_zoom': 10,
+                'tile_layer': 'OpenStreetMap',
+                'max_zoom': 18,
+                'min_zoom': 3,
+                'attribution': 'Fire Simulation Visualization System'
+            },
+            'colors': {
+                'fire_states': {
+                    'empty': '#FFFFFF',
+                    'fuel': '#228B22',
+                    'burning': '#FF4500',
+                    'burned': '#8B4513',
+                    'water': '#4169E1'
+                },
+                'heat_map': {
+                    'low': '#FFFF00',
+                    'medium': '#FF8C00',
+                    'high': '#FF0000'
+                },
+                'terrain': {
+                    'contour_lines': '#8B4513',
+                    'elevation_gradient': ['#90EE90', '#ADFF2F', '#32CD32', '#228B22', '#006400']
+                }
+            },
+            'layers': {
+                'fire_state': {
+                    'enabled': True,
+                    'opacity': 0.7,
+                    'cell_size': 'auto'
+                },
+                'heat_map': {
+                    'enabled': True,
+                    'opacity': 0.6,
+                    'radius': 15,
+                    'blur': 15
+                },
+                'contour': {
+                    'enabled': False,
+                    'opacity': 0.5,
+                    'line_weight': 2
+                },
+                'terrain': {
+                    'enabled': False,
+                    'opacity': 0.4
+                }
+            },
+            'animation': {
+                'interval': 1000,
+                'auto_play': False,
+                'loop': True,
+                'show_controls': True
+            },
+            'charts': {
+                'enable_3d': True,
+                'color_scheme': 'viridis',
+                'font_size': 12,
+                'background_color': 'white'
+            },
+            'ui': {
+                'theme': 'light',
+                'sidebar_width': 300,
+                'show_legend': True,
+                'show_statistics': True
+            },
+            'output': {
+                'directory': 'visualization_output',
+                'format': 'html',
+                'include_data': False
+            },
+            'performance': {
+                'max_grid_size': 1000,
+                'cache_enabled': True,
+                'lazy_loading': True
+            }
+        }
+    
+    def _load_config_file(self, config_path: str):
+        """설정 파일 로드 및 병합"""
+        try:
+            with open(config_path, 'r', encoding='utf-8') as f:
+                file_config = json.load(f)
+            
+            # 기본 설정과 파일 설정 병합
+            self._merge_config(self.config, file_config)
+            
+        except Exception as e:
+            print(f"설정 파일 로드 오류: {e}")
+    
+    def _merge_config(self, base: Dict, update: Dict):
+        """재귀적 설정 병합"""
+        for key, value in update.items():
+            if key in base and isinstance(base[key], dict) and isinstance(value, dict):
+                self._merge_config(base[key], value)
+            else:
+                base[key] = value
+    
+    def get(self, key_path: str, default=None):
+        """
+        점 표기법으로 설정값 가져오기
+        
+        Args:
+            key_path: 'map.default_center' 형식의 키 경로
+            default: 기본값
+        """
+        keys = key_path.split('.')
+        value = self.config
+        
+        try:
+            for key in keys:
+                if isinstance(value, dict) and key in value:
+                    value = value[key]
+                else:
+                    return default
+            return value
+        except:
+            return default
+    
+    def set(self, key_path: str, value):
+        """
+        점 표기법으로 설정값 저장
+        
+        Args:
+            key_path: 'map.default_center' 형식의 키 경로
+            value: 저장할 값
+        """
+        keys = key_path.split('.')
+        target = self.config
+        
+        for key in keys[:-1]:
+            if key not in target:
+                target[key] = {}
+            target = target[key]
+        
+        target[keys[-1]] = value
+    
+    def save(self, output_path: Optional[str] = None):
+        """설정을 파일로 저장"""
+        if not output_path:
+            output_path = self.config_path or 'config.json'
+        
+        try:
+            with open(output_path, 'w', encoding='utf-8') as f:
+                json.dump(self.config, f, indent=2, ensure_ascii=False)
+            print(f"설정 저장 완료: {output_path}")
+        except Exception as e:
+            print(f"설정 저장 오류: {e}")
+
 
 # Map configuration
 MAP_CONFIG = {
