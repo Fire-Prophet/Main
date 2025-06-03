@@ -13,7 +13,7 @@ from datetime import datetime
 from .config import EXPORTS_DIR, CELL_STATES
 
 
-class FireSimulationDataLoader:
+class SimulationDataLoader:
     """Load and parse fire simulation data from JSON files."""
     
     def __init__(self, exports_dir: str = EXPORTS_DIR):
