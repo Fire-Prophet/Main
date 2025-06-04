@@ -32,7 +32,7 @@ except ImportError:
 class MapRenderer:
     """Render fire simulation data on interactive maps."""
     
-    def __init__(self, layer_manager=None):
+    def __init__(self, layer_manager: LayerManager):
         """
         Initialize the map renderer.
         

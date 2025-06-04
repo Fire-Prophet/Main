@@ -24,7 +24,7 @@ if parent_dir not in sys.path:
 try:
     # Try package imports first
     from visualize import (
-        FireSimulationDataLoader,
+        SimulationDataLoader,
         MapRenderer,
         LayerManager,
         AnimationController,
@@ -35,7 +35,7 @@ try:
 except ImportError:
     try:
         # Try direct module imports
-        from data_loader import SimulationDataLoader as FireSimulationDataLoader
+        from data_loader import SimulationDataLoader
         from map_renderer import MapRenderer
         from layer_manager import LayerManager
         from animation_controller import AnimationController
@@ -45,7 +45,7 @@ except ImportError:
     except ImportError as import_error:
         print(f"⚠️ Import error: {import_error}")
         # Create minimal fallback classes
-        class FireSimulationDataLoader:
+        class SimulationDataLoader:
             def __init__(self, file_path=None):
                 self.data = []
                 self.file_path = file_path
@@ -245,7 +245,7 @@ class FireSimulationVisualizer:
     def load_simulation_data(self, file_path: str):
         """Load simulation data from file."""
         try:
-            self.data_loader = FireSimulationDataLoader(file_path)
+            self.data_loader = SimulationDataLoader(file_path)
             data = self.data_loader.load_data()
             st.session_state.simulation_data = data
             st.session_state.current_time_step = 0
