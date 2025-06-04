@@ -8,14 +8,31 @@ from folium import plugins
 from typing import Dict, List, Optional, Tuple, Any
 import numpy as np
 import json
-from .config import MAP_CONFIG, FIRE_COLORS
-from .layer_manager import LayerManager
+import os
+import sys
+
+# Add current directory to path for imports
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
+try:
+    from config import MAP_CONFIG, FIRE_COLORS
+    from layer_manager import LayerManager
+except ImportError:
+    # Fallback to relative imports
+    try:
+        from .config import MAP_CONFIG, FIRE_COLORS
+        from .layer_manager import LayerManager
+    except ImportError:
+        # Default values if imports fail
+        MAP_CONFIG = {"default_zoom": 10, "default_center": [37.5, 127.0]}
+        FIRE_COLORS = {"empty": "#ffffff", "tree": "#228b22", "burning": "#ff4500", "burned": "#800000", "wet": "#0000ff"}
+        LayerManager = None
 
 
 class MapRenderer:
     """Render fire simulation data on interactive maps."""
     
-    def __init__(self, layer_manager: LayerManager):
+    def __init__(self, layer_manager=None):
         """
         Initialize the map renderer.
         
