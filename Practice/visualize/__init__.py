@@ -9,6 +9,56 @@
 __version__ = "1.0.0"
 __author__ = "Fire Simulation Team"
 
+# Import all main classes to make them available at package level
+try:
+    from .data_loader import SimulationDataLoader as FireSimulationDataLoader
+    from .map_renderer import MapRenderer
+    from .layer_manager import LayerManager
+    from .animation_controller import AnimationController
+    from .chart_generator import ChartGenerator
+    from .config import UI_CONFIG
+    from .fire_map_visualizer import FireMapVisualizer
+except ImportError:
+    # Create dummy classes for fallback
+    class FireSimulationDataLoader:
+        def __init__(self, *args, **kwargs):
+            pass
+    
+    class MapRenderer:
+        def __init__(self, *args, **kwargs):
+            pass
+    
+    class LayerManager:
+        def __init__(self, *args, **kwargs):
+            pass
+    
+    class AnimationController:
+        def __init__(self, *args, **kwargs):
+            pass
+    
+    class ChartGenerator:
+        def __init__(self, *args, **kwargs):
+            pass
+    
+    class FireMapVisualizer:
+        def __init__(self, *args, **kwargs):
+            pass
+    
+    UI_CONFIG = {
+        'title': 'Fire Simulation Visualizer',
+        'sidebar_width': 300
+    }
+
+__all__ = [
+    'FireSimulationDataLoader',
+    'MapRenderer', 
+    'LayerManager',
+    'AnimationController',
+    'ChartGenerator',
+    'FireMapVisualizer',
+    'UI_CONFIG'
+]
+
 # 메인 클래스 import
 from .fire_map_visualizer import FireMapVisualizer
 
