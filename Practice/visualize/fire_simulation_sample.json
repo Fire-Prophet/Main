@@ -1,0 +1,66 @@
+[
+  {
+    "time_step": 0,
+    "fire_points": [
+      {"lat": 36.5, "lon": 127.0, "intensity": 1.0},
+      {"lat": 36.51, "lon": 127.01, "intensity": 0.8},
+      {"lat": 36.49, "lon": 126.99, "intensity": 0.9}
+    ],
+    "statistics": {"total_burning": 3, "total_burned": 0}
+  },
+  {
+    "time_step": 1,
+    "fire_points": [
+      {"lat": 36.5, "lon": 127.0, "intensity": 1.0},
+      {"lat": 36.51, "lon": 127.01, "intensity": 0.8},
+      {"lat": 36.49, "lon": 126.99, "intensity": 0.9},
+      {"lat": 36.52, "lon": 127.02, "intensity": 0.7},
+      {"lat": 36.48, "lon": 126.98, "intensity": 0.8}
+    ],
+    "statistics": {"total_burning": 5, "total_burned": 0}
+  },
+  {
+    "time_step": 2,
+    "fire_points": [
+      {"lat": 36.5, "lon": 127.0, "intensity": 1.0},
+      {"lat": 36.51, "lon": 127.01, "intensity": 0.8},
+      {"lat": 36.49, "lon": 126.99, "intensity": 0.9},
+      {"lat": 36.52, "lon": 127.02, "intensity": 0.7},
+      {"lat": 36.48, "lon": 126.98, "intensity": 0.8},
+      {"lat": 36.53, "lon": 127.03, "intensity": 0.6},
+      {"lat": 36.47, "lon": 126.97, "intensity": 0.7},
+      {"lat": 36.54, "lon": 127.04, "intensity": 0.5}
+    ],
+    "statistics": {"total_burning": 8, "total_burned": 0}
+  },
+  {
+    "time_step": 3,
+    "fire_points": [
+      {"lat": 36.51, "lon": 127.01, "intensity": 0.8},
+      {"lat": 36.49, "lon": 126.99, "intensity": 0.9},
+      {"lat": 36.52, "lon": 127.02, "intensity": 0.7},
+      {"lat": 36.48, "lon": 126.98, "intensity": 0.8},
+      {"lat": 36.53, "lon": 127.03, "intensity": 0.6},
+      {"lat": 36.47, "lon": 126.97, "intensity": 0.7},
+      {"lat": 36.54, "lon": 127.04, "intensity": 0.5},
+      {"lat": 36.55, "lon": 127.05, "intensity": 0.4},
+      {"lat": 36.46, "lon": 126.96, "intensity": 0.6}
+    ],
+    "statistics": {"total_burning": 9, "total_burned": 1}
+  },
+  {
+    "time_step": 4,
+    "fire_points": [
+      {"lat": 36.52, "lon": 127.02, "intensity": 0.7},
+      {"lat": 36.48, "lon": 126.98, "intensity": 0.8},
+      {"lat": 36.53, "lon": 127.03, "intensity": 0.6},
+      {"lat": 36.47, "lon": 126.97, "intensity": 0.7},
+      {"lat": 36.54, "lon": 127.04, "intensity": 0.5},
+      {"lat": 36.55, "lon": 127.05, "intensity": 0.4},
+      {"lat": 36.46, "lon": 126.96, "intensity": 0.6},
+      {"lat": 36.56, "lon": 127.06, "intensity": 0.3},
+      {"lat": 36.45, "lon": 126.95, "intensity": 0.5}
+    ],
+    "statistics": {"total_burning": 9, "total_burned": 3}
+  }
+]
