@@ -10,310 +10,369 @@ import plotly.graph_objects as go
 from typing import Dict, List, Optional
 import os
 import json
+import sys
 
-from .data_loader import FireSimulationDataLoader
-from .map_renderer import MapRenderer
-from .layer_manager import LayerManager
-from .animation_controller import AnimationController
-from .chart_generator import ChartGenerator
-from .config import UI_CONFIG
+# Ensure current directory is in Python path
+current_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.dirname(current_dir)
+if current_dir not in sys.path:
+    sys.path.insert(0, current_dir)
+if parent_dir not in sys.path:
+    sys.path.insert(0, parent_dir)
+
+# Import approach: Try different import strategies
+try:
+    # Try package imports first
+    from visualize import (
+        FireSimulationDataLoader,
+        MapRenderer,
+        LayerManager,
+        AnimationController,
+        ChartGenerator,
+        UI_CONFIG
+    )
+    print("✅ Successfully imported from visualize package")
+except ImportError:
+    try:
+        # Try direct module imports
+        from data_loader import SimulationDataLoader as FireSimulationDataLoader
+        from map_renderer import MapRenderer
+        from layer_manager import LayerManager
+        from animation_controller import AnimationController
+        from chart_generator import ChartGenerator
+        from config import UI_CONFIG
+        print("✅ Successfully imported direct modules")
+    except ImportError as import_error:
+        print(f"⚠️ Import error: {import_error}")
+        # Create minimal fallback classes
+        class FireSimulationDataLoader:
+            def __init__(self, file_path=None):
+                self.data = []
+                self.file_path = file_path
+                if file_path and os.path.exists(file_path):
+                    try:
+                        with open(file_path, 'r', encoding='utf-8') as f:
+                            self.data = json.load(f)
+                    except Exception as e:
+                        print(f"Error loading data: {e}")
+                        self.data = []
+            
+            def load_data(self):
+                return self.data
+            
+            def get_time_steps(self):
+                if self.data and isinstance(self.data, list) and len(self.data) > 0:
+                    return list(range(len(self.data)))
+                return [0]
+            
+            def get_statistics(self):
+                return {
+                    'total_points': len(self.data) if isinstance(self.data, list) else 0,
+                    'time_steps': len(self.get_time_steps())
+                }
+        
+        class MapRenderer:
+            def __init__(self):
+                pass
+            
+            def create_base_map(self, center_lat=36.5, center_lon=127.5, zoom=7):
+                return folium.Map(location=[center_lat, center_lon], zoom_start=zoom)
+            
+            def add_fire_layer(self, map_obj, data, time_step=0):
+                if data and isinstance(data, list) and time_step < len(data):
+                    step_data = data[time_step]
+                    if isinstance(step_data, dict) and 'fire_points' in step_data:
+                        for point in step_data['fire_points']:
+                            if 'lat' in point and 'lon' in point:
+                                folium.CircleMarker(
+                                    location=[point['lat'], point['lon']],
+                                    radius=5,
+                                    color='red',
+                                    fillColor='orange',
+                                    fillOpacity=0.7
+                                ).add_to(map_obj)
+                return map_obj
+        
+        class LayerManager:
+            def __init__(self):
+                self.layers = {}
+        
+        class AnimationController:
+            def __init__(self):
+                self.current_step = 0
+        
+        class ChartGenerator:
+            def __init__(self):
+                pass
+            
+            def create_time_series_chart(self, data):
+                fig = go.Figure()
+                fig.add_trace(go.Scatter(
+                    x=list(range(len(data))),
+                    y=[len(step.get('fire_points', [])) if isinstance(step, dict) else 0 for step in data],
+                    mode='lines+markers',
+                    name='Fire Points Count'
+                ))
+                fig.update_layout(
+                    title='Fire Spread Over Time',
+                    xaxis_title='Time Step',
+                    yaxis_title='Number of Fire Points'
+                )
+                return fig
+        
+        UI_CONFIG = {
+            'title': 'Fire Simulation Visualizer',
+            'sidebar_width': 300,
+            'map_height': 600
+        }
+        print("✅ Using fallback classes")
 
 
-class WebInterface:
-    """Web-based interface for fire simulation visualization."""
+class FireSimulationVisualizer:
+    """Main web interface class for fire simulation visualization."""
     
     def __init__(self):
-        """Initialize the web interface."""
-        self.data_loader = FireSimulationDataLoader()
+        self.data_loader = None
+        self.map_renderer = MapRenderer()
         self.layer_manager = LayerManager()
-        self.map_renderer = MapRenderer(self.layer_manager)
+        self.animation_controller = AnimationController()
         self.chart_generator = ChartGenerator()
         
-        # Session state initialization
+        # Initialize session state
+        if 'current_time_step' not in st.session_state:
+            st.session_state.current_time_step = 0
         if 'simulation_data' not in st.session_state:
             st.session_state.simulation_data = None
-        if 'animation_controller' not in st.session_state:
-            st.session_state.animation_controller = None
-        if 'current_step' not in st.session_state:
-            st.session_state.current_step = 0
-        if 'selected_simulation' not in st.session_state:
-            st.session_state.selected_simulation = None
+        if 'loaded_file' not in st.session_state:
+            st.session_state.loaded_file = None
     
-    def run(self):
-        """Run the Streamlit web interface."""
+    def setup_page_config(self):
+        """Configure the Streamlit page settings."""
         st.set_page_config(
-            page_title="Fire Simulation Visualizer",
+            page_title=UI_CONFIG['title'],
             page_icon="🔥",
             layout="wide",
             initial_sidebar_state="expanded"
         )
-        
-        st.title("🔥 Fire Simulation Map Visualizer")
-        st.markdown("Interactive visualization of fire simulation results on geographic maps")
-        
-        # Sidebar for controls
-        self._render_sidebar()
-        
-        # Main content area
-        if st.session_state.simulation_data:
-            self._render_main_content()
-        else:
-            self._render_welcome_screen()
     
-    def _render_sidebar(self):
-        """Render the sidebar with controls."""
-        st.sidebar.header("🎮 Controls")
+    def render_sidebar(self):
+        """Render the sidebar with controls and file selection."""
+        st.sidebar.title("🔥 Fire Simulation Controls")
         
-        # Simulation selection
-        self._render_simulation_selector()
+        # File selection
+        st.sidebar.subheader("📁 Data Selection")
         
+        # Look for JSON files in the current directory and exports folder
+        json_files = []
+        search_paths = [
+            current_dir,
+            os.path.join(parent_dir, 'exports'),
+            os.path.join(os.path.dirname(parent_dir), 'exports')
+        ]
+        
+        for search_path in search_paths:
+            if os.path.exists(search_path):
+                try:
+                    for file in os.listdir(search_path):
+                        if file.endswith('.json') and 'fire_simulation' in file:
+                            full_path = os.path.join(search_path, file)
+                            json_files.append((file, full_path))
+                except Exception as e:
+                    st.sidebar.error(f"Error reading directory {search_path}: {e}")
+        
+        if json_files:
+            file_names = [f[0] for f in json_files]
+            selected_index = st.sidebar.selectbox(
+                "Select simulation data file:",
+                options=range(len(file_names)),
+                format_func=lambda x: file_names[x],
+                index=0
+            )
+            
+            selected_file_name, selected_file_path = json_files[selected_index]
+            
+            if st.sidebar.button("Load Data") or st.session_state.loaded_file != selected_file_name:
+                self.load_simulation_data(selected_file_path)
+                st.session_state.loaded_file = selected_file_name
+                st.rerun()
+        else:
+            st.sidebar.warning("No fire simulation JSON files found.")
+            st.sidebar.info("Looking in: visualize/, exports/, ../exports/")
+        
+        # Display loaded data info
         if st.session_state.simulation_data:
-            st.sidebar.divider()
+            st.sidebar.success(f"✅ Data loaded: {st.session_state.loaded_file}")
+            
+            # Time step control
+            st.sidebar.subheader("⏰ Time Control")
+            time_steps = self.data_loader.get_time_steps() if self.data_loader else [0]
+            
+            current_step = st.sidebar.slider(
+                "Time Step",
+                min_value=0,
+                max_value=max(time_steps) if time_steps else 0,
+                value=st.session_state.current_time_step,
+                step=1
+            )
+            
+            if current_step != st.session_state.current_time_step:
+                st.session_state.current_time_step = current_step
+                st.rerun()
             
             # Animation controls
-            self._render_animation_controls()
+            col1, col2 = st.sidebar.columns(2)
+            with col1:
+                if st.button("⏮️ Previous"):
+                    if st.session_state.current_time_step > 0:
+                        st.session_state.current_time_step -= 1
+                        st.rerun()
             
-            st.sidebar.divider()
+            with col2:
+                if st.button("⏭️ Next"):
+                    if st.session_state.current_time_step < max(time_steps):
+                        st.session_state.current_time_step += 1
+                        st.rerun()
             
-            # Layer controls
-            self._render_layer_controls()
-            
-            st.sidebar.divider()
-            
-            # Export options
-            self._render_export_options()
+            # Display statistics
+            st.sidebar.subheader("📊 Statistics")
+            if hasattr(self.data_loader, 'get_statistics'):
+                stats = self.data_loader.get_statistics()
+                st.sidebar.metric("Total Time Steps", stats.get('time_steps', 0))
+                st.sidebar.metric("Total Data Points", stats.get('total_points', 0))
+        
+        return st.session_state.loaded_file, st.session_state.current_time_step
     
-    def _render_simulation_selector(self):
-        """Render simulation file selector."""
-        st.sidebar.subheader("📁 Select Simulation")
+    def load_simulation_data(self, file_path: str):
+        """Load simulation data from file."""
+        try:
+            self.data_loader = FireSimulationDataLoader(file_path)
+            data = self.data_loader.load_data()
+            st.session_state.simulation_data = data
+            st.session_state.current_time_step = 0
+            st.sidebar.success(f"Loaded {len(data) if isinstance(data, list) else 0} time steps")
+        except Exception as e:
+            st.sidebar.error(f"Error loading data: {str(e)}")
+            st.session_state.simulation_data = None
+    
+    def render_main_content(self, current_time_step: int):
+        """Render the main content area with map and charts."""
+        st.title(UI_CONFIG['title'])
         
-        # Get available simulations
-        simulations = self.data_loader.list_available_simulations()
-        
-        if not simulations:
-            st.sidebar.warning("No simulation files found in exports directory.")
+        if not st.session_state.simulation_data:
+            st.info("👈 Please select and load a simulation data file from the sidebar.")
+            st.markdown("""
+            ### Available Features:
+            
+            - 🗺️ **Interactive Fire Spread Map**: Visualize fire progression over time
+            - 📊 **Statistical Charts**: Track fire intensity and spread patterns  
+            - ⏰ **Time Controls**: Navigate through simulation timesteps
+            - 🎮 **Animation**: Play back fire simulation in real-time
+            
+            ### Getting Started:
+            1. Select a fire simulation JSON file from the sidebar
+            2. Click "Load Data" to initialize the visualization
+            3. Use time controls to explore different moments in the simulation
+            4. View charts and statistics to analyze fire behavior
+            """)
             return
-        
-        # Create selection options
-        simulation_options = {sim['display_name']: sim for sim in simulations}
-        
-        selected_name = st.sidebar.selectbox(
-            "Choose simulation:",
-            options=list(simulation_options.keys()),
-            index=0 if not st.session_state.selected_simulation else 
-                  list(simulation_options.keys()).index(st.session_state.selected_simulation) 
-                  if st.session_state.selected_simulation in simulation_options else 0
-        )
-        
-        if selected_name and selected_name != st.session_state.selected_simulation:
-            # Load new simulation
-            selected_sim = simulation_options[selected_name]
-            try:
-                with st.spinner("Loading simulation data..."):
-                    simulation_data = self.data_loader.load_simulation(selected_sim['file_path'])
-                    st.session_state.simulation_data = simulation_data
-                    st.session_state.selected_simulation = selected_name
-                    st.session_state.current_step = 0
-                    
-                    # Create new animation controller
-                    st.session_state.animation_controller = AnimationController(
-                        simulation_data, 
-                        self._animation_update_callback
-                    )
-                    
-                st.sidebar.success("Simulation loaded successfully!")
-                st.rerun()
-                
-            except Exception as e:
-                st.sidebar.error(f"Error loading simulation: {str(e)}")
-    
-    def _render_animation_controls(self):
-        """Render animation control panel."""
-        st.sidebar.subheader("⏯️ Animation")
-        
-        if not st.session_state.animation_controller:
-            return
-        
-        controller = st.session_state.animation_controller
-        max_steps = controller.max_steps
-        
-        # Step slider
-        current_step = st.sidebar.slider(
-            "Simulation Step",
-            min_value=0,
-            max_value=max_steps - 1,
-            value=st.session_state.current_step,
-            key="step_slider"
-        )
-        
-        if current_step != st.session_state.current_step:
-            st.session_state.current_step = current_step
-            controller.set_step(current_step)
-        
-        # Control buttons
-        col1, col2, col3 = st.sidebar.columns(3)
-        
-        with col1:
-            if st.button("⏮️", help="Previous Step"):
-                controller.previous_step()
-                st.session_state.current_step = controller.current_step
-                st.rerun()
-        
-        with col2:
-            play_button_text = "⏸️" if controller.is_playing else "▶️"
-            if st.button(play_button_text, help="Play/Pause"):
-                if controller.is_playing:
-                    controller.pause()
-                else:
-                    controller.play()
-                st.rerun()
-        
-        with col3:
-            if st.button("⏭️", help="Next Step"):
-                controller.next_step()
-                st.session_state.current_step = controller.current_step
-                st.rerun()
-        
-        # Speed control
-        speed = st.sidebar.slider(
-            "Animation Speed (ms)",
-            min_value=100,
-            max_value=2000,
-            value=controller.speed,
-            step=100,
-            help="Time between animation frames"
-        )
-        controller.set_speed(speed)
-        
-        # Loop option
-        loop = st.sidebar.checkbox("Loop Animation", value=controller.loop)
-        controller.set_loop(loop)
-    
-    def _render_layer_controls(self):
-        """Render layer visibility controls."""
-        st.sidebar.subheader("🗺️ Map Layers")
-        
-        layers_summary = self.layer_manager.get_layers_summary()
-        
-        for layer_id, layer_info in layers_summary['layers'].items():
-            layer = self.layer_manager.get_layer(layer_id)
-            if not layer:
-                continue
-            
-            # Layer visibility checkbox
-            visible = st.sidebar.checkbox(
-                layer_info['name'],
-                value=layer_info['visible'],
-                key=f"layer_{layer_id}"
-            )
-            self.layer_manager.set_layer_visibility(layer_id, visible)
-            
-            # Opacity slider if layer is visible
-            if visible:
-                opacity = st.sidebar.slider(
-                    f"{layer_info['name']} Opacity",
-                    min_value=0.0,
-                    max_value=1.0,
-                    value=layer_info['opacity'],
-                    step=0.1,
-                    key=f"opacity_{layer_id}"
-                )
-                self.layer_manager.set_layer_opacity(layer_id, opacity)
-    
-    def _render_export_options(self):
-        """Render export options."""
-        st.sidebar.subheader("💾 Export")
-        
-        if st.sidebar.button("Export Map as HTML"):
-            self._export_map()
-        
-        if st.sidebar.button("Export Charts as HTML"):
-            self._export_charts()
-        
-        if st.sidebar.button("Export Data as JSON"):
-            self._export_data()
-    
-    def _render_main_content(self):
-        """Render main content area."""
-        simulation_data = st.session_state.simulation_data
-        controller = st.session_state.animation_controller
-        
-        # Display simulation summary
-        self._render_simulation_info()
         
         # Create tabs for different views
-        tab1, tab2, tab3 = st.tabs(["🗺️ Map View", "📊 Charts", "📈 Statistics"])
+        tab1, tab2, tab3 = st.tabs(["🗺️ Map View", "📊 Charts", "📋 Data Info"])
         
         with tab1:
-            self._render_map_view()
+            self.render_map_view(current_time_step)
         
         with tab2:
-            self._render_charts_view()
+            self.render_charts_view()
         
         with tab3:
-            self._render_statistics_view()
+            self.render_data_info()
     
-    def _render_simulation_info(self):
-        """Render simulation information panel."""
-        simulation_data = st.session_state.simulation_data
-        summary = self.data_loader.get_simulation_summary(simulation_data)
-        
-        # Display key metrics in columns
-        col1, col2, col3, col4 = st.columns(4)
-        
-        with col1:
-            st.metric("Source Table", summary['source_table'])
-            st.metric("Grid Size", summary['grid_size'])
-        
-        with col2:
-            st.metric("Total Steps", summary['total_steps'])
-            st.metric("Current Step", st.session_state.current_step)
-        
-        with col3:
-            st.metric("Final Burned Cells", summary['final_burned_cells'])
-            st.metric("Final Burn Ratio", summary['final_burn_ratio'])
-        
-        with col4:
-            st.metric("Max Burning Cells", summary['max_simultaneous_burning'])
-            st.metric("Peak Heat", summary['peak_heat'])
-    
-    def _render_map_view(self):
+    def render_map_view(self, current_time_step: int):
         """Render the map visualization."""
-        simulation_data = st.session_state.simulation_data
-        controller = st.session_state.animation_controller
+        st.subheader(f"Fire Spread Map - Time Step: {current_time_step}")
         
-        # Get current step data
-        step_data = controller._get_current_step_data()
-        
-        # Update map layers with current data
-        bounds = self.data_loader.get_grid_bounds(simulation_data)
-        
-        # Update fire grid layer if we have grid data (final step)
-        if step_data['grid_data']:
-            self.layer_manager.update_fire_grid_layer(step_data['grid_data'], bounds)
-        
-        # Create and render map
-        if bounds:
-            center = [(bounds[0] + bounds[2]) / 2, (bounds[1] + bounds[3]) / 2]
-            map_obj = self.map_renderer.create_base_map(center=center, bounds=bounds)
-        else:
-            map_obj = self.map_renderer.create_base_map()
-        
-        # Render all layers
-        map_obj = self.map_renderer.render_all_layers()
-        
-        # Add statistics overlay
-        if step_data.get('statistics'):
-            self.map_renderer.add_statistics_overlay(step_data['statistics'])
-        
-        # Add legend
-        self.map_renderer.add_legend('fire_grid')
-        
-        # Display map
         try:
-            from streamlit_folium import st_folium
-            st_folium(map_obj, width=700, height=500)
-        except ImportError:
-            # Fallback to basic HTML display
-            import streamlit.components.v1 as components
-            components.html(map_obj._repr_html_(), height=500)\n    \n    def _render_charts_view(self):\n        \"\"\"Render charts and graphs.\"\"\"\n        simulation_data = st.session_state.simulation_data\n        time_evolution = simulation_data.get('time_evolution', {})\n        current_step = st.session_state.current_step\n        \n        # Chart selection\n        chart_type = st.selectbox(\n            \"Select Chart Type:\",\n            [\"Dashboard\", \"Cell Evolution\", \"Heat Evolution\", \"Burn Ratio\", \"Fire Perimeter\", \"Step Comparison\"]\n        )\n        \n        # Generate and display selected chart\n        if chart_type == \"Dashboard\":\n            fig = self.chart_generator.create_comprehensive_dashboard(time_evolution, current_step)\n        elif chart_type == \"Cell Evolution\":\n            fig = self.chart_generator.create_statistics_timeline(time_evolution)\n        elif chart_type == \"Heat Evolution\":\n            fig = self.chart_generator.create_heat_evolution_chart(time_evolution)\n        elif chart_type == \"Burn Ratio\":\n            fig = self.chart_generator.create_burn_ratio_chart(time_evolution)\n        elif chart_type == \"Fire Perimeter\":\n            fig = self.chart_generator.create_fire_perimeter_chart(time_evolution)\n        elif chart_type == \"Step Comparison\":\n            statistics = simulation_data.get('statistics', [])\n            fig = self.chart_generator.create_step_comparison_chart(statistics)\n        else:\n            fig = go.Figure()\n        \n        if fig:\n            st.plotly_chart(fig, use_container_width=True)\n    \n    def _render_statistics_view(self):\n        \"\"\"Render detailed statistics view.\"\"\"\n        simulation_data = st.session_state.simulation_data\n        controller = st.session_state.animation_controller\n        \n        # Current step summary\n        step_summary = controller.create_step_summary()\n        \n        st.subheader(f\"📊 Step {step_summary['step']} Statistics\")\n        \n        # Display statistics in columns\n        col1, col2 = st.columns(2)\n        \n        with col1:\n            st.write(\"**Cell Counts:**\")\n            st.write(f\"🌲 Tree Cells: {step_summary['tree_cells']:,}\")\n            st.write(f\"🔥 Burning Cells: {step_summary['burning_cells']:,}\")\n            st.write(f\"🔶 Burned Cells: {step_summary['burned_cells']:,}\")\n            st.write(f\"💧 Wet Cells: {step_summary['wet_cells']:,}\")\n            st.write(f\"⬜ Empty Cells: {step_summary['empty_cells']:,}\")\n        \n        with col2:\n            st.write(\"**Fire Metrics:**\")\n            st.write(f\"🌡️ Total Heat: {step_summary['total_heat']:.2f}\")\n            st.write(f\"🔥 Max Heat: {step_summary['max_heat']:.2f}\")\n            st.write(f\"📐 Fire Perimeter: {step_summary['fire_perimeter']}\")\n            st.write(f\"📊 Burn Ratio: {step_summary['burn_percentage']}\")\n            st.write(f\"🎯 Fire Intensity: {step_summary['fire_intensity']}\")\n        \n        st.divider()\n        \n        # Time evolution table\n        st.subheader(\"📈 Time Evolution Data\")\n        \n        time_evolution = simulation_data.get('time_evolution', {})\n        if time_evolution:\n            # Create DataFrame for display\n            import pandas as pd\n            \n            df_data = {\n                'Step': time_evolution.get('steps', []),\n                'Tree Cells': time_evolution.get('tree_cells', []),\n                'Burning Cells': time_evolution.get('burning_cells', []),\n                'Burned Cells': time_evolution.get('burned_cells', []),\n                'Total Heat': time_evolution.get('total_heat', []),\n                'Max Heat': time_evolution.get('max_heat', []),\n                'Burn Ratio': [f\"{r:.1%}\" for r in time_evolution.get('burn_ratio', [])]\n            }\n            \n            df = pd.DataFrame(df_data)\n            st.dataframe(df, use_container_width=True)\n    \n    def _render_welcome_screen(self):\n        \"\"\"Render welcome screen when no simulation is loaded.\"\"\"\n        st.info(\"👈 Please select a simulation from the sidebar to begin visualization.\")\n        \n        # Show available simulations\n        simulations = self.data_loader.list_available_simulations()\n        \n        if simulations:\n            st.subheader(\"Available Simulations:\")\n            for sim in simulations:\n                with st.expander(f\"🔥 {sim['display_name']}\"):\n                    st.write(f\"**Table:** {sim['table_name']}\")\n                    st.write(f\"**Timestamp:** {sim['formatted_date']}\")\n                    st.write(f\"**File:** {sim['filename']}\")\n        else:\n            st.warning(\"No simulation files found. Please run some fire simulations first.\")\n    \n    def _animation_update_callback(self, step: int, step_data: Dict):\n        \"\"\"Callback for animation updates.\"\"\"\n        st.session_state.current_step = step\n        # Force a rerun to update the display\n        st.rerun()\n    \n    def _export_map(self):\n        \"\"\"Export current map as HTML.\"\"\"\n        try:\n            filename = f\"fire_simulation_map_step_{st.session_state.current_step}.html\"\n            self.map_renderer.save_map(filename)\n            st.sidebar.success(f\"Map exported as {filename}\")\n        except Exception as e:\n            st.sidebar.error(f\"Export failed: {str(e)}\")\n    \n    def _export_charts(self):\n        \"\"\"Export charts as HTML.\"\"\"\n        try:\n            simulation_data = st.session_state.simulation_data\n            time_evolution = simulation_data.get('time_evolution', {})\n            \n            # Create dashboard chart\n            fig = self.chart_generator.create_comprehensive_dashboard(\n                time_evolution, st.session_state.current_step\n            )\n            \n            filename = f\"fire_simulation_charts_step_{st.session_state.current_step}.html\"\n            self.chart_generator.save_chart(fig, filename)\n            st.sidebar.success(f\"Charts exported as {filename}\")\n        except Exception as e:\n            st.sidebar.error(f\"Export failed: {str(e)}\")\n    \n    def _export_data(self):\n        \"\"\"Export simulation data as JSON.\"\"\"\n        try:\n            controller = st.session_state.animation_controller\n            export_data = controller.export_animation_data()\n            \n            filename = f\"fire_simulation_export_step_{st.session_state.current_step}.json\"\n            with open(filename, 'w', encoding='utf-8') as f:\n                json.dump(export_data, f, indent=2, ensure_ascii=False)\n            \n            st.sidebar.success(f\"Data exported as {filename}\")\n        except Exception as e:\n            st.sidebar.error(f\"Export failed: {str(e)}\")"
+            # Create base map
+            fire_map = self.map_renderer.create_base_map()
+            
+            # Add fire layer for current time step
+            if self.data_loader and st.session_state.simulation_data:
+                fire_map = self.map_renderer.add_fire_layer(
+                    fire_map, 
+                    st.session_state.simulation_data, 
+                    current_time_step
+                )
+            
+            # Display map
+            map_data = st_folium(fire_map, width=700, height=UI_CONFIG['map_height'])
+            
+            # Display current step info
+            if st.session_state.simulation_data and isinstance(st.session_state.simulation_data, list):
+                if current_time_step < len(st.session_state.simulation_data):
+                    step_data = st.session_state.simulation_data[current_time_step]
+                    if isinstance(step_data, dict):
+                        fire_points = step_data.get('fire_points', [])
+                        st.info(f"Current step has {len(fire_points)} active fire points")
+        
+        except Exception as e:
+            st.error(f"Error rendering map: {str(e)}")
+    
+    def render_charts_view(self):
+        """Render statistical charts."""
+        st.subheader("📊 Fire Simulation Analytics")
+        
+        if not st.session_state.simulation_data:
+            st.info("No data loaded for chart generation.")
+            return
+        
+        try:
+            # Create time series chart
+            chart = self.chart_generator.create_time_series_chart(st.session_state.simulation_data)
+            st.plotly_chart(chart, use_container_width=True)
+            
+        except Exception as e:
+            st.error(f"Error generating charts: {str(e)}")
+    
+    def render_data_info(self):
+        """Render data information and raw data preview."""
+        st.subheader("📋 Simulation Data Information")
+        
+        if not st.session_state.simulation_data:
+            st.info("No data loaded.")
+            return
+        
+        # Display basic info
+        data = st.session_state.simulation_data
+        st.metric("Total Time Steps", len(data) if isinstance(data, list) else 0)
+        
+        # Show sample data
+        if isinstance(data, list) and len(data) > 0:
+            st.subheader("Sample Data (First Time Step)")
+            st.json(data[0])
+        
+        # Show current step data
+        current_step = st.session_state.current_time_step
+        if isinstance(data, list) and current_step < len(data):
+            st.subheader(f"Current Time Step Data (Step {current_step})")
+            st.json(data[current_step])
+    
+    def run(self):
+        """Main application entry point."""
+        self.setup_page_config()
+        
+        # Render sidebar and get current selections
+        loaded_file, current_time_step = self.render_sidebar()
+        
+        # Render main content
+        self.render_main_content(current_time_step)
+
+
+def main():
+    """Main function to run the Streamlit app."""
+    visualizer = FireSimulationVisualizer()
+    visualizer.run()
+
+
+if __name__ == "__main__":
+    main()

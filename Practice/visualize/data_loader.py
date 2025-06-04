@@ -10,7 +10,26 @@ from typing import Dict, List, Optional, Tuple, Union
 import numpy as np
 from datetime import datetime
 
-from .config import EXPORTS_DIR, CELL_STATES
+# Add current directory to path for imports
+import sys
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
+try:
+    from config import EXPORTS_DIR, CELL_STATES
+except ImportError:
+    # Fallback to relative import
+    try:
+        from .config import EXPORTS_DIR, CELL_STATES
+    except ImportError:
+        # Default values if config is not available
+        EXPORTS_DIR = "../exports"
+        CELL_STATES = {
+            0: "empty",
+            1: "tree", 
+            2: "burning",
+            3: "burned",
+            4: "wet"
+        }
 
 
 class SimulationDataLoader:
