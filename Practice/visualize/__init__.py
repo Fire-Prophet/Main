@@ -11,7 +11,7 @@ __author__ = "Fire Simulation Team"
 
 # Import all main classes to make them available at package level
 try:
-    from .data_loader import SimulationDataLoader as FireSimulationDataLoader
+    from .data_loader import SimulationDataLoader
     from .map_renderer import MapRenderer
     from .layer_manager import LayerManager
     from .animation_controller import AnimationController
@@ -20,7 +20,7 @@ try:
     from .fire_map_visualizer import FireMapVisualizer
 except ImportError:
     # Create dummy classes for fallback
-    class FireSimulationDataLoader:
+    class SimulationDataLoader:
         def __init__(self, *args, **kwargs):
             pass
     
@@ -50,7 +50,7 @@ except ImportError:
     }
 
 __all__ = [
-    'FireSimulationDataLoader',
+    'SimulationDataLoader',
     'MapRenderer', 
     'LayerManager',
     'AnimationController',
