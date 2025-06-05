@@ -91,7 +91,7 @@ def test_data_processor():
     agg_df = processor.aggregate_data(
         cleaned_df, 
         group_by=['category'], 
-        agg_functions={'value1': 'mean', 'value2': 'sum', 'score': 'std'}
+        aggregations={'value1': 'mean', 'value2': 'sum', 'score': 'std'}
     )
     print(f"집계 결과:\n{agg_df}")
     
