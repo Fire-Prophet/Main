@@ -1,0 +1,500 @@
+{
+  "metadata": {
+    "generation_time": "2025-06-05T13:39:10.021964",
+    "simulation_config": {
+      "simulation": {
+        "grid_size": [
+          80,
+          80
+        ],
+        "cell_size": 30.0,
+        "max_steps": 100,
+        "validation_interval": 10
+      },
+      "validation": {
+        "enable_pattern_validation": true,
+        "enable_temporal_validation": true,
+        "enable_fuel_validation": true,
+        "enable_confusion_matrix": true,
+        "enable_roc_analysis": true
+      },
+      "realism": {
+        "enable_spotting": true,
+        "enable_human_influence": true,
+        "enable_suppression": true,
+        "enable_seasonal_effects": true,
+        "max_spot_distance": 1000.0
+      },
+      "output": {
+        "save_intermediate_results": true,
+        "generate_animations": true,
+        "create_detailed_reports": true,
+        "output_directory": "integrated_simulation_results"
+      }
+    },
+    "total_simulation_steps": 100
+  },
+  "simulation_summary": {
+    "total_burned_area": 0,
+    "burn_percentage": 0.0,
+    "total_simulation_steps": 100,
+    "final_fire_size": 3,
+    "fuel_statistics": {
+      "GS1": {
+        "total_cells": 1309,
+        "burned_cells": 0,
+        "burn_ratio": 0.0
+      },
+      "GS2": {
+        "total_cells": 1315,
+        "burned_cells": 0,
+        "burn_ratio": 0.0
+      },
+      "TL1": {
+        "total_cells": 1221,
+        "burned_cells": 0,
+        "burn_ratio": 0.0
+      },
+      "TL2": {
+        "total_cells": 1259,
+        "burned_cells": 0,
+        "burn_ratio": 0.0
+      },
+      "TU1": {
+        "total_cells": 1296,
+        "burned_cells": 0,
+        "burn_ratio": 0.0
+      }
+    }
+  },
+  "validation_results": {
+    "spread_pattern": {
+      "total_burned_area": 0,
+      "burn_ratio": 0.0,
+      "compactness": 0.0,
+      "circularity": 0.0,
+      "fractal_dimension": null,
+      "jaccard_similarity": 0.0,
+      "area_error_ratio": 1.0,
+      "predicted_area": 0,
+      "actual_area": 870,
+      "intersection_area": 0,
+      "union_area": 870
+    },
+    "temporal_progression": {
+      "burn_rate_progression": {
+        "rates": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "mean_rate": 0.0,
+        "max_rate": 0.0,
+        "min_rate": 0.0,
+        "rate_variance": 0.0,
+        "acceleration": 0.0
+      },
+      "perimeter_growth": {
+        "growth_rates": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          8,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "mean_growth": 0.08080808080808081,
+        "max_growth": 8.0,
+        "min_growth": 0.0
+      },
+      "acceleration_phases": {
+        "phases": [],
+        "acceleration_periods": 0,
+        "total_acceleration_steps": 0
+      },
+      "growth_consistency": 0.0
+    },
+    "fuel_response": {
+      "GS1": {
+        "total_cells": 1309,
+        "burned_cells": 0,
+        "burn_ratio": 0.0
+      },
+      "GS2": {
+        "total_cells": 1315,
+        "burned_cells": 0,
+        "burn_ratio": 0.0
+      },
+      "TL1": {
+        "total_cells": 1221,
+        "burned_cells": 0,
+        "burn_ratio": 0.0
+      },
+      "TL2": {
+        "total_cells": 1259,
+        "burned_cells": 0,
+        "burn_ratio": 0.0
+      },
+      "TU1": {
+        "total_cells": 1296,
+        "burned_cells": 0,
+        "burn_ratio": 0.0
+      },
+      "statistics": {
+        "mean_burn_rate": 0.0,
+        "std_burn_rate": 0.0,
+        "max_burn_rate": 0.0,
+        "min_burn_rate": 0.0
+      }
+    },
+    "confusion_matrix": {
+      "accuracy": 0.8640625,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1_score": 0.0,
+      "confusion_matrix": [
+        [
+          5530,
+          0
+        ],
+        [
+          870,
+          0
+        ]
+      ],
+      "classification_report": {
+        "0": {
+          "precision": 0.8640625,
+          "recall": 1.0,
+          "f1-score": 0.9270746018440905,
+          "support": 5530.0
+        },
+        "1": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1-score": 0.0,
+          "support": 870.0
+        },
+        "accuracy": 0.8640625,
+        "macro avg": {
+          "precision": 0.43203125,
+          "recall": 0.5,
+          "f1-score": 0.46353730092204526,
+          "support": 6400.0
+        },
+        "weighted avg": {
+          "precision": 0.74660400390625,
+          "recall": 0.8640625,
+          "f1-score": 0.8010503981559094,
+          "support": 6400.0
+        }
+      }
+    },
+    "roc_metrics": {
+      "fpr": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "tpr": [
+        0.0,
+        0.0034482758620689655,
+        1.0
+      ],
+      "thresholds": [
+        1e+308,
+        0.5,
+        0.0
+      ],
+      "auc": 0.5017241379310344
+    }
+  },
+  "realism_metrics": {
+    "spotting_events": 0,
+    "max_fire_intensity": 84.39659118652344,
+    "mean_flame_length": 0.5334210991859436,
+    "fire_behavior_diversity": 0,
+    "suppression_effectiveness": 0
+  },
+  "performance_history": [
+    {
+      "step": 10,
+      "timestamp": "2025-06-05T13:39:09.794646",
+      "validation_score": 0.0,
+      "realism_score": 0.3,
+      "combined_score": 0.15
+    },
+    {
+      "step": 20,
+      "timestamp": "2025-06-05T13:39:09.815075",
+      "validation_score": 0.0,
+      "realism_score": 0.3,
+      "combined_score": 0.15
+    },
+    {
+      "step": 30,
+      "timestamp": "2025-06-05T13:39:09.835040",
+      "validation_score": 0.0,
+      "realism_score": 0.3,
+      "combined_score": 0.15
+    },
+    {
+      "step": 40,
+      "timestamp": "2025-06-05T13:39:09.855915",
+      "validation_score": 0.0,
+      "realism_score": 0.3,
+      "combined_score": 0.15
+    },
+    {
+      "step": 50,
+      "timestamp": "2025-06-05T13:39:09.877373",
+      "validation_score": 0.0,
+      "realism_score": 0.3,
+      "combined_score": 0.15
+    },
+    {
+      "step": 60,
+      "timestamp": "2025-06-05T13:39:09.899166",
+      "validation_score": 0.0,
+      "realism_score": 0.3,
+      "combined_score": 0.15
+    },
+    {
+      "step": 70,
+      "timestamp": "2025-06-05T13:39:09.923562",
+      "validation_score": 0.0,
+      "realism_score": 0.3,
+      "combined_score": 0.15
+    },
+    {
+      "step": 80,
+      "timestamp": "2025-06-05T13:39:09.947238",
+      "validation_score": 0.0,
+      "realism_score": 0.3,
+      "combined_score": 0.15
+    },
+    {
+      "step": 90,
+      "timestamp": "2025-06-05T13:39:09.971835",
+      "validation_score": 0.0,
+      "realism_score": 0.3,
+      "combined_score": 0.15
+    },
+    {
+      "step": 100,
+      "timestamp": "2025-06-05T13:39:09.996575",
+      "validation_score": 0.0,
+      "realism_score": 0.3,
+      "combined_score": 0.15
+    }
+  ],
+  "improvement_suggestions": [
+    {
+      "category": "validation",
+      "priority": "high",
+      "suggestion": "CA 규칙 파라미터 조정 필요",
+      "details": "확산 확률 또는 이웃 규칙을 재검토하세요"
+    },
+    {
+      "category": "pattern",
+      "priority": "medium",
+      "suggestion": "화재 확산 패턴이 너무 분산됨",
+      "details": "이웃 규칙을 더 집중적으로 설정하거나 연료 연속성을 확인하세요"
+    },
+    {
+      "category": "spotting",
+      "priority": "low",
+      "suggestion": "비화 현상이 관찰되지 않음",
+      "details": "풍속이나 화재 강도 조건을 확인하세요"
+    }
+  ]
+}
