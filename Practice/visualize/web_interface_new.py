@@ -24,7 +24,7 @@ if parent_dir not in sys.path:
 try:
     # Try package imports first
     from visualize import (
-        SimulationDataLoader,
+        FireSimulationDataLoader,
         MapRenderer,
         LayerManager,
         AnimationController,
@@ -35,7 +35,7 @@ try:
 except ImportError:
     try:
         # Try direct module imports
-        from data_loader import SimulationDataLoader
+        from data_loader import FireSimulationDataLoader
         from map_renderer import MapRenderer
         from layer_manager import LayerManager
         from animation_controller import AnimationController
@@ -45,7 +45,7 @@ except ImportError:
     except ImportError as import_error:
         print(f"⚠️ Import error: {import_error}")
         # Create minimal fallback classes
-        class SimulationDataLoader:
+        class FireSimulationDataLoader:
             def __init__(self, file_path=None):
                 self.data = []
                 self.file_path = file_path
@@ -162,42 +162,30 @@ class FireSimulationVisualizer:
         # File selection
         st.sidebar.subheader("📁 Data Selection")
         
-        # Look for JSON files in the current directory and exports folder
+        # Look for JSON files in the current directory
         json_files = []
-        search_paths = [
-            current_dir,
-            os.path.join(parent_dir, 'exports'),
-            os.path.join(os.path.dirname(parent_dir), 'exports')
-        ]
-        
-        for search_path in search_paths:
-            if os.path.exists(search_path):
-                try:
-                    for file in os.listdir(search_path):
-                        if file.endswith('.json') and 'fire_simulation' in file:
-                            full_path = os.path.join(search_path, file)
-                            json_files.append((file, full_path))
-                except Exception as e:
-                    st.sidebar.error(f"Error reading directory {search_path}: {e}")
+        try:
+            for file in os.listdir(current_dir):
+                if file.endswith('.json') and 'fire_simulation' in file:
+                    json_files.append(file)
+        except Exception as e:
+            st.sidebar.error(f"Error reading directory: {e}")
         
         if json_files:
-            file_names = [f[0] for f in json_files]
-            selected_index = st.sidebar.selectbox(
+            selected_file = st.sidebar.selectbox(
                 "Select simulation data file:",
-                options=range(len(file_names)),
-                format_func=lambda x: file_names[x],
-                index=0
+                options=json_files,
+                index=0 if json_files else None
             )
             
-            selected_file_name, selected_file_path = json_files[selected_index]
-            
-            if st.sidebar.button("Load Data") or st.session_state.loaded_file != selected_file_name:
-                self.load_simulation_data(selected_file_path)
-                st.session_state.loaded_file = selected_file_name
+            if st.sidebar.button("Load Data") or st.session_state.loaded_file != selected_file:
+                file_path = os.path.join(current_dir, selected_file)
+                self.load_simulation_data(file_path)
+                st.session_state.loaded_file = selected_file
                 st.rerun()
         else:
-            st.sidebar.warning("No fire simulation JSON files found.")
-            st.sidebar.info("Looking in: visualize/, exports/, ../exports/")
+            st.sidebar.warning("No fire simulation JSON files found in the current directory.")
+            st.sidebar.info("Expected files with pattern: fire_simulation_*.json")
         
         # Display loaded data info
         if st.session_state.simulation_data:
@@ -245,7 +233,7 @@ class FireSimulationVisualizer:
     def load_simulation_data(self, file_path: str):
         """Load simulation data from file."""
         try:
-            self.data_loader = SimulationDataLoader(file_path)
+            self.data_loader = FireSimulationDataLoader(file_path)
             data = self.data_loader.load_data()
             st.session_state.simulation_data = data
             st.session_state.current_time_step = 0
