@@ -174,7 +174,7 @@ def test_integration():
     
     try:
         # 데이터 처리 파이프라인
-        processed_df = integrator.data_processor.clean_data(df)
+        processed_df = integrator.processor.clean_data(df)
         
         # 분석 수행
         analysis_results = integrator.analyzer.descriptive_statistics(processed_df)
