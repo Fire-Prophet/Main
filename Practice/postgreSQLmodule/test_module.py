@@ -104,6 +104,7 @@ def test_data_analyzer(df):
     print("\n🧪 DataAnalyzer 테스트 시작...")
     
     analyzer = DataAnalyzer()
+    processor = DataProcessor()  # 이상값 탐지용
     
     # 기술통계
     stats = analyzer.descriptive_statistics(df)
@@ -115,8 +116,8 @@ def test_data_analyzer(df):
         corr_results = analyzer.correlation_analysis(df[numeric_cols])
         print(f"상관관계 분석 완료: {len(corr_results)} 개 강한 상관관계")
     
-    # 이상값 탐지
-    outliers = analyzer.detect_outliers(df, 'value2')
+    # 이상값 탐지 (DataProcessor에서)
+    outliers = processor.detect_outliers(df, 'value2')
     print(f"탐지된 이상값 수: {len(outliers)}")
     
     # 분포 분석
