@@ -112,8 +112,8 @@ def test_data_analyzer(df):
     # 상관관계 분석
     numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
     if len(numeric_cols) >= 2:
-        corr_matrix = analyzer.correlation_analysis(df[numeric_cols])
-        print(f"상관관계 매트릭스 크기: {corr_matrix.shape}")
+        corr_results = analyzer.correlation_analysis(df[numeric_cols])
+        print(f"상관관계 분석 완료: {len(corr_results)} 개 강한 상관관계")
     
     # 이상값 탐지
     outliers = analyzer.detect_outliers(df, 'value2')
