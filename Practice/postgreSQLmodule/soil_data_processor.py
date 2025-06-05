@@ -60,7 +60,7 @@ class SoilDataProcessor:
             7: 0.1   # 매우 불량 (습함)
         }
     
-    def process_soil_dataframe(self, soil_df: pd.DataFrame) -> pd.DataFrame:
+    def process_soil_data(self, soil_df: pd.DataFrame) -> pd.DataFrame:
         """
         토양 데이터프레임을 처리하여 화재 관련 매개변수 추가
         
