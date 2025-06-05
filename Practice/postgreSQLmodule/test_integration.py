@@ -14,7 +14,9 @@ import numpy as np
 
 # 현재 디렉토리를 Python 경로에 추가
 current_dir = Path(__file__).parent
+parent_dir = current_dir.parent
 sys.path.append(str(current_dir))
+sys.path.append(str(parent_dir))
 
 def test_module_imports():
     """모듈 임포트 테스트"""
@@ -114,7 +116,7 @@ def test_soil_processor():
         processed_data = processor.process_soil_data(sample_data)
         
         print(f"  ✅ 토양 데이터 처리 성공: {len(processed_data)}개 레코드")
-        print(f"  📊 화재 위험 지수 범위: {processed_data['fire_risk_index'].min():.1f}-{processed_data['fire_risk_index'].max():.1f}")
+        print(f"  📊 화재 위험 지수 범위: {processed_data['fire_risk_score'].min():.1f}-{processed_data['fire_risk_score'].max():.1f}")
         
         return True
         
