@@ -4,7 +4,23 @@
 PostgreSQL에서 추출한 토양 데이터를 화재 시뮬레이션용으로 변환하는 모듈
 """
 
-import pandas as pd
+impor        # 토성별 특성 추가 (texture 컬럼이 있는 경우만)
+        if 'texture' in processed_df.columns:
+            texture_properties = []
+            for texture in processed_df['texture']:
+                properties = self.texture_properties.get(texture, {
+                    'drainage': 0.5, 'water_holding': 0.5, 'fire_risk': 0.5
+                })
+                texture_properties.append(properties)
+            
+            processed_df['texture_drainage'] = [p['drainage'] for p in texture_properties]
+            processed_df['water_holding'] = [p['water_holding'] for p in texture_properties]
+            processed_df['texture_fire_risk'] = [p['fire_risk'] for p in texture_properties]
+        else:
+            # texture 컬럼이 없으면 기본값 사용
+            processed_df['texture_drainage'] = 0.5
+            processed_df['water_holding'] = 0.5
+            processed_df['texture_fire_risk'] = 0.5 pd
 import numpy as np
 from typing import Dict, List, Tuple, Optional, Any
 import logging
