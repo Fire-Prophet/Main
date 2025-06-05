@@ -233,9 +233,17 @@ def example_data_preprocessing():
             # 기본 품질 체크
             quality_results = quality_checker.comprehensive_quality_check(table_name)
             
-            print(f"   NULL 값 품질: {quality_results['null_analysis']['quality_score']:.1f}/100")
-            print(f"   데이터 일관성: {quality_results['consistency_analysis']['quality_score']:.1f}/100")
-            print(f"   전체 품질 등급: {quality_results['overall_quality']['grade']}")
+            # 안전한 결과 출력
+            if 'null_analysis' in quality_results:
+                print(f"   NULL 값 품질: {quality_results['null_analysis'].get('quality_score', 0):.1f}/100")
+            
+            if 'consistency_analysis' in quality_results:
+                print(f"   데이터 일관성: {quality_results['consistency_analysis'].get('quality_score', 0):.1f}/100")
+            
+            if 'overall_quality' in quality_results:
+                print(f"   전체 품질 등급: {quality_results['overall_quality'].get('grade', '알 수 없음')}")
+            else:
+                print(f"   품질 분석 완료: {len(quality_results)} 개 항목 검사됨")
             
             # 공간 데이터 특화 체크
             analyzer = integrator.analyzer
