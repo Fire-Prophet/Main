@@ -1,0 +1,10 @@
+# PostgreSQL 연결을 위한 필수 패키지
+psycopg2-binary==2.9.9
+python-dotenv==1.0.0
+
+# 선택적 패키지 (데이터 처리용)
+pandas==2.1.4
+numpy==1.24.3
+
+# 환경 설정 및 로깅
+python-decouple==3.8
