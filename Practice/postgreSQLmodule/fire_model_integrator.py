@@ -44,18 +44,68 @@ except ImportError:
     from fire_simulation_connector import FireSimulationConnector
 
 # model 디렉토리의 화재 모델들 임포트
-model_path = Path(__file__).parent.parent / "model"
-if model_path.exists():
-    sys.path.append(str(model_path))
-
 try:
+    # 절대 경로를 통한 import 시도
+    model_path = Path(__file__).parent.parent / "model"
+    if model_path.exists():
+        sys.path.insert(0, str(model_path.absolute()))
+    
     from advanced_ca_model import AdvancedCAModel
     from realistic_fire_model import RealisticFireModel
     from integrated_fire_simulation import IntegratedFireSimulation
     FIRE_MODELS_AVAILABLE = True
+    
 except ImportError as e:
-    print(f"⚠️  화재 모델을 가져올 수 없습니다: {e}")
-    FIRE_MODELS_AVAILABLE = False
+    # 대체 import 방법들
+    try:
+        # 동적 import 시도
+        import importlib.util
+        
+        model_path = Path(__file__).parent.parent / "model"
+        AdvancedCAModel = None
+        RealisticFireModel = None  
+        IntegratedFireSimulation = None
+        
+        if model_path.exists():
+            # advanced_ca_model
+            spec = importlib.util.spec_from_file_location(
+                "advanced_ca_model", 
+                model_path / "advanced_ca_model.py"
+            )
+            if spec and spec.loader:
+                module = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(module)
+                AdvancedCAModel = getattr(module, 'AdvancedCAModel', None)
+            
+            # realistic_fire_model
+            spec = importlib.util.spec_from_file_location(
+                "realistic_fire_model",
+                model_path / "realistic_fire_model.py"
+            )
+            if spec and spec.loader:
+                module = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(module)
+                RealisticFireModel = getattr(module, 'RealisticFireModel', None)
+            
+            # integrated_fire_simulation
+            spec = importlib.util.spec_from_file_location(
+                "integrated_fire_simulation",
+                model_path / "integrated_fire_simulation.py"
+            )
+            if spec and spec.loader:
+                module = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(module)
+                IntegratedFireSimulation = getattr(module, 'IntegratedFireSimulation', None)
+        
+        FIRE_MODELS_AVAILABLE = all([AdvancedCAModel, RealisticFireModel, IntegratedFireSimulation])
+        
+    except Exception as fallback_error:
+        print(f"⚠️  화재 모델을 가져올 수 없습니다: {e}")
+        print(f"🔄 대체 방법도 실패: {fallback_error}")
+        AdvancedCAModel = None
+        RealisticFireModel = None
+        IntegratedFireSimulation = None
+        FIRE_MODELS_AVAILABLE = False
 
 class FireModelIntegrator:
     """

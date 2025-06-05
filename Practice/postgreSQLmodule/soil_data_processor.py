@@ -1,15 +1,11 @@
 #!/usr/bin/env python3
 """
-🌱 토양 데이터 처리기 (Soil Data Processor)
-==========================================
-
-PostgreSQL에서 추출한 토양 관리 데이터를 화재 시뮬레이션용으로 변환하는 모듈입니다.
-토양 수분, 배수성, 화재 위험도 등을 계산하여 연료 수분 함량 예측에 활용합니다.
+토양 데이터 처리기 - PostgreSQL에서 추출한 토양 데이터를 화재 시뮬레이션용으로 변환
 """
 
 import pandas as pd
 import numpy as np
-from typing import Dict, List, Tuple, Optional, Any, Union
+from typing import Dict, List, Tuple, Optional, Any
 import logging
 
 
@@ -17,7 +13,6 @@ class SoilDataProcessor:
     """토양 데이터를 화재 시뮬레이션용 매개변수로 변환하는 클래스"""
     
     def __init__(self):
-        """토양 데이터 처리기 초기화"""
         self.logger = self._setup_logger()
         
         # 토양 타입별 특성 정의
@@ -30,7 +25,6 @@ class SoilDataProcessor:
         }
     
     def _setup_logger(self) -> logging.Logger:
-        """로깅 설정"""
         logger = logging.getLogger('SoilDataProcessor')
         logger.setLevel(logging.INFO)
         
@@ -51,7 +45,7 @@ class SoilDataProcessor:
         try:
             processed_df = soil_df.copy()
             
-            # 토양 타입 정규화 및 특성 매핑
+            # 토양 타입별 특성 매핑
             processed_df = self._map_soil_properties(processed_df)
             
             # 연료 수분 함량 계산
@@ -71,7 +65,6 @@ class SoilDataProcessor:
         """토양 타입을 기반으로 속성 매핑"""
         processed_df = df.copy()
         
-        # 토양 타입별 특성 추가
         if 'soil_type' in processed_df.columns:
             soil_properties = []
             for soil_type in processed_df['soil_type']:
@@ -153,9 +146,9 @@ class SoilDataProcessor:
             return np.full(grid_size, default_value)
         
         rows, cols = grid_size
-        grid = np.full(grid_size, 0.3)  # 기본값으로 초기화
+        grid = np.full(grid_size, 0.3)
         
-        # 간단한 격자 채우기 (실제로는 공간 좌표 기반으로 해야 함)
+        # 간단한 격자 채우기
         if parameter in soil_df.columns:
             mean_value = soil_df[parameter].mean()
             grid.fill(mean_value)
@@ -182,7 +175,6 @@ class SoilDataProcessor:
 
 
 if __name__ == "__main__":
-    # 테스트 코드
     print("🌱 토양 데이터 처리기 테스트")
     
     test_data = {
