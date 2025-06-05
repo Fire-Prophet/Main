@@ -153,7 +153,7 @@ class ForestDataProcessor:
         
         return base_fuel
     
-    def process_forest_dataframe(self, forest_df: pd.DataFrame) -> pd.DataFrame:
+    def process_forest_data(self, forest_df: pd.DataFrame) -> pd.DataFrame:
         """
         임상도 데이터프레임을 처리하여 연료 모델 정보 추가
         
