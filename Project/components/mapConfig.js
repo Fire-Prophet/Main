@@ -1,11 +1,12 @@
 // src/components/VWorldMap/mapConfig.js
+require('dotenv').config({ path: '../../.env' }); // Adjust path to .env if necessary
 
 import Style from 'ol/style/Style';
 import Stroke from 'ol/style/Stroke';
 import Fill from 'ol/style/Fill';
 import Circle from 'ol/style/Circle';
 
-export const VWORLD_XYZ_URL = 'http://xdworld.vworld.kr:8080/2d/Base/201802/{z}/{x}/{y}.png?apiKey=B60B525E-129D-3B8B-880F-77C24CF86AE3';
+export const VWORLD_XYZ_URL = process.env.VWORLD_XYZ_URL || 'http://xdworld.vworld.kr:8080/2d/Base/201802/{z}/{x}/{y}.png?apiKey=B60B525E-129D-3B8B-880F-77C24CF86AE3';
 
 // --- 아산/천안 토양도 범례 정보 ---
 export const asanCheonanSoilColorMap = {
