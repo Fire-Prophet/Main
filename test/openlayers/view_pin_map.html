@@ -97,7 +97,7 @@
                 return feature;
             });
             if (feature) {
-                const coordinates = feature.getGeometry().getCoordinates();
+                const coordinates = feature.getGeometry().getCoordinates(); // These are in EPSG:3857
                 popup.setPosition(coordinates);
                 const properties = feature.getProperties();
                 let content = '<b>' + (properties.name || 'Pin') + '</b>';
@@ -105,6 +105,14 @@
                     content += '<br>' + properties.description;
                 }
                 popupElement.querySelector('code').innerHTML = content;
+
+                // --- Fire Simulation Placeholder ---
+                // Transform coordinates from map projection (EPSG:3857) back to Lon/Lat (EPSG:4326)
+                const lonLatCoordinates = ol.proj.toLonLat(coordinates);
+                console.log(`Fire simulation initiated at: Longitude ${lonLatCoordinates[0]}, Latitude ${lonLatCoordinates[1]}`);
+                // TODO: Replace console.log with actual fire simulation module call
+                // Example: startFireSimulation(lonLatCoordinates[0], lonLatCoordinates[1], properties);
+
             } else {
                 popup.setPosition(undefined); // Hide popup
             }
