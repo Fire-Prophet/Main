@@ -124,6 +124,36 @@ def to_geojson_feature_collection(data_list, geometry_type, lon_field=None, lat_
     }
     return json.dumps(feature_collection, indent=2)
 
+def create_geojson_pin(longitude, latitude, properties=None):
+    """
+    Creates a GeoJSON Point Feature for a specific coordinate (a "pin").
+
+    Args:
+        longitude (float): The longitude of the pin.
+        latitude (float): The latitude of the pin.
+        properties (dict, optional): A dictionary of properties for the pin. Defaults to None.
+
+    Returns:
+        str: A JSON string representing the GeoJSON Point Feature, or None if an error occurs.
+    """
+    try:
+        lon = float(longitude)
+        lat = float(latitude)
+    except (ValueError, TypeError):
+        print(f"Error: Invalid longitude or latitude provided. longitude={longitude}, latitude={latitude}")
+        return None
+
+    geometry = _create_point_geometry(lon, lat)
+    
+    feature_properties = properties if isinstance(properties, dict) else {}
+
+    feature = {
+        "type": "Feature",
+        "geometry": geometry,
+        "properties": feature_properties
+    }
+    return json.dumps(feature, indent=2)
+
 def csv_to_list_of_dicts(csv_file_path, encoding='utf-8'):
     """
     Reads a CSV file and converts it into a list of dictionaries.
@@ -258,3 +288,21 @@ if __name__ == '__main__':
         print(geojson_mixed_points)
     else:
         print("\\nNo valid GeoJSON created from mixed quality point data.")
+
+    # --- Single Pin Example ---
+    pin_lon = 127.05
+    pin_lat = 37.55
+    pin_props = {"name": "My Favorite Spot", "category": "POI"}
+    geojson_single_pin = create_geojson_pin(pin_lon, pin_lat, pin_props)
+    if geojson_single_pin:
+        print("\\nGeoJSON Single Pin:")
+        print(geojson_single_pin)
+
+    geojson_pin_no_props = create_geojson_pin(126.9770, 37.5669) # Example with no properties
+    if geojson_pin_no_props:
+        print("\\nGeoJSON Single Pin (no properties):")
+        print(geojson_pin_no_props)
+    
+    invalid_pin = create_geojson_pin("not-a-lon", "not-a-lat")
+    if not invalid_pin:
+        print("\\nGeoJSON Single Pin (invalid input example handled correctly)")
