@@ -4,6 +4,7 @@ const express = require('express');
 const cors =require('cors');
 const mysql = require('mysql2/promise'); // MySQL 연결을 위해 이미 사용 중
 const turf = require('@turf/turf');
+require('dotenv').config(); // .env 파일 로드
 
 const app = express();
 const port = 3001;
@@ -13,24 +14,24 @@ app.use(express.json());
 
 // --- 기존 MySQL 연결 풀 설정 (내 DB) ---
 const pool = mysql.createPool({
-    host: 'localhost',
-    user: 'root',
-    password: 'jonggu2020', // 본인 MySQL 암호
-    database: 'fire',
+    host: process.env.DB_HOST || 'localhost',
+    user: process.env.DB_USER || 'root',
+    password: process.env.DB_PASSWORD || 'jonggu2020', // 본인 MySQL 암호
+    database: process.env.DB_DATABASE || 'fire',
     waitForConnections: true,
-    connectionLimit: 10,
+    connectionLimit: parseInt(process.env.DB_CONNECTION_LIMIT) || 10,
     queueLimit: 0
 });
 
 // --- 동료의 외부 MySQL DB 연결 풀 설정 ---
 const colleagueDbPool = mysql.createPool({
-    host: 'probius.homes',          // 동료 DB 호스트 주소(IP)
-    user: 'root',                   // 동료 DB 사용자 이름
-    port: 3306,                     // 동료 DB 포트 번호
-    password: 'probius', // ⭐⭐⭐ [필수] 동료 DB 비밀번호를 입력하세요!
-    database: 'project_fire',       // 동료 DB의 데이터베이스 이름 (스키마)
+    host: process.env.COLLEAGUE_DB_HOST || 'probius.homes',          // 동료 DB 호스트 주소(IP)
+    user: process.env.COLLEAGUE_DB_USER || 'root',                   // 동료 DB 사용자 이름
+    port: parseInt(process.env.COLLEAGUE_DB_PORT) || 3306,                     // 동료 DB 포트 번호
+    password: process.env.COLLEAGUE_DB_PASSWORD || 'probius', // ⭐⭐⭐ [필수] 동료 DB 비밀번호를 입력하세요!
+    database: process.env.COLLEAGUE_DB_DATABASE || 'project_fire',       // 동료 DB의 데이터베이스 이름 (스키마)
     waitForConnections: true,
-    connectionLimit: 5, // 동료 DB이므로 커넥션 수를 적절히 조절
+    connectionLimit: parseInt(process.env.COLLEAGUE_DB_CONNECTION_LIMIT) || 5, // 동료 DB이므로 커넥션 수를 적절히 조절
     queueLimit: 0
 });
 

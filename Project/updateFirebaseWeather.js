@@ -1,4 +1,5 @@
 // updateFirebaseWeather.js
+require('dotenv').config(); // Load .env file
 
 console.log("--- 스크립트 실행 시작 ---");
 console.log("현재 시간:", new Date().toLocaleString("ko-KR", { timeZone: "Asia/Seoul" }));
@@ -47,7 +48,7 @@ if (!mountainStationsData || mountainStationsData.length === 0) {
 }
 
 // 2. Firebase Admin SDK 초기화
-const SERVICE_ACCOUNT_PATH = './serviceAccountKey.json';
+const SERVICE_ACCOUNT_PATH = process.env.FIREBASE_SERVICE_ACCOUNT_PATH || './serviceAccountKey.json';
 let serviceAccount;
 try {
     console.log(`서비스 계정 키 파일 ('${SERVICE_ACCOUNT_PATH}') 로드 시도...`);
@@ -59,7 +60,7 @@ try {
     process.exit(1);
 }
 
-const FIREBASE_DATABASE_URL = 'https://ljg2020315018-default-rtdb.firebaseio.com';
+const FIREBASE_DATABASE_URL = process.env.FIREBASE_DATABASE_URL || 'https://ljg2020315018-default-rtdb.firebaseio.com';
 console.log(`Firebase Database URL: ${FIREBASE_DATABASE_URL}`);
 
 try {
@@ -83,8 +84,8 @@ const db = admin.database();
 console.log("Firebase Realtime Database 인스턴스 가져오기 완료.");
 
 // 3. 기상청 API 관련 정보 설정
-const KMA_API_KEY = 'q1XWOAcb5VskyP5OQGl%2B08hLR9MyROzs%2Fav5AbVDjLpvMEbcl4qlFU%2BxSf6oxNDm2XGu0ljXk6cjUocIPX7N8Q%3D%3D'; // 실제 키를 사용하세요
-const KMA_WEATHER_API_URL = 'http://apis.data.go.kr/1400377/mtweather/mountListSearch';
+const KMA_API_KEY = process.env.KMA_API_KEY || 'q1XWOAcb5VskyP5OQGl%2B08hLR9MyROzs%2Fav5AbVDjLpvMEbcl4qlFU%2BxSf6oxNDm2XGu0ljXk6cjUocIPX7N8Q%3D%3D'; // 실제 키를 사용하세요
+const KMA_WEATHER_API_URL = process.env.KMA_WEATHER_API_URL || 'http://apis.data.go.kr/1400377/mtweather/mountListSearch';
 console.log("기상청 API 설정 완료.");
 
 /**
