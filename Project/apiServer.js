@@ -274,6 +274,48 @@ app.get('/api/colleague-grid-data', async (req, res) => {
     }
 });
 
+// --- API to provide pins from 'imported_fire_data_auto' in project_fire DB ---
+app.get('/api/imported-fire-data-pins', async (req, res) => {
+    let connection;
+    try {
+        console.log(`[API /api/imported-fire-data-pins] 동료의 외부 MySQL DB ('project_fire') '${process.env.COLLEAGUE_DB_DATABASE}' 조회 시도...`);
+        connection = await colleagueDbPool.getConnection(); // 동료 DB 풀 (project_fire)
+
+        const tableName = 'imported_fire_data_auto';
+        const lonCol = 'lng'; // As specified: 경도 컬럼은 lng
+        const latCol = 'lat'; // As specified: 위도 컬럼은 lat
+
+        // Selecting coordinates and adding a simple ID and name for each pin.
+        // You might want to select an actual ID column from your table if available.
+        const query = `SELECT \`${lonCol}\`, \`${latCol}\` FROM \`${tableName}\` WHERE \`${lonCol}\` IS NOT NULL AND \`${latCol}\` IS NOT NULL`;
+
+        const [rows] = await connection.query(query);
+        console.log(`[API /api/imported-fire-data-pins] '${tableName}' 테이블에서 ${rows.length}개 레코드 조회 완료. GeoJSON으로 변환 중...`);
+
+        const features = rows.map((row, index) => ({
+            type: 'Feature',
+            geometry: {
+                type: 'Point',
+                coordinates: [parseFloat(row[lonCol]), parseFloat(row[latCol])]
+            },
+            properties: {
+                pin_id: `imported_pin_${index + 1}`, // A generated ID for now
+                name: `Pin ${index + 1}` // A default name for the label
+                // Add other properties from 'row' here if needed later
+                // e.g., description: row.description_column
+            }
+        }));
+
+        res.json({ type: 'FeatureCollection', features });
+        console.log(`[API /api/imported-fire-data-pins] GeoJSON 응답 전송 완료.`);
+
+    } catch (err) {
+        console.error(`[API /api/imported-fire-data-pins] 오류:`, err);
+        res.status(500).json({ error: 'DB Error or Data Processing Error while fetching pins' });
+    } finally {
+        if (connection) connection.release();
+    }
+});
 
 // 서버 시작
 app.listen(port, () => {
@@ -283,4 +325,5 @@ app.listen(port, () => {
     console.log(`   산불 확산 예측 API (POST): http://localhost:${port}/api/predict-fire-spread`);
     console.log(`   (내 DB) 매핑된 격자 데이터 API (GET): http://localhost:${port}/api/mapped-grid-data`);
     console.log(`   (동료 DB) 격자 데이터 API (GET): http://localhost:${port}/api/colleague-grid-data`);
+    console.log(`   (동료 DB) 가져온 산불 데이터 핀 API (GET): http://localhost:${port}/api/imported-fire-data-pins`);
 });
