@@ -96,37 +96,6 @@
     DB_NAME=db # 본인의 데이터베이스 이름
     ```
 
-5.  **MySQL 데이터베이스 테이블 생성**  !생략!
-    - `simulationService.js`는 `imported_fire_data_auto` 테이블을 사용합니다.
-    - 아래 SQL 쿼리를 사용하여 테이블을 생성하고, 관련 데이터를 미리 입력해야 합니다.
-    ```sql
-    CREATE TABLE imported_fire_data_auto (
-        id INT PRIMARY KEY,
-        lat DECIMAL(10, 8),
-        lng DECIMAL(11, 8),
-        imsangdo_frtp_cd VARCHAR(10),
-        soil_tpgrp_tpcd VARCHAR(10),
-        soil_sltp_cd VARCHAR(10)
-    );
-    ```
-
-6.  **`mountainStations.js` 파일 생성**  !생략!
-    `updateFirebaseWeather.js`와 `simulationService.js`는 `backend` 폴더 바로 아래에 위치한 `mountainStations.js` 파일을 필요로 합니다. 아래 내용을 복사하여 `backend/mountainStations.js` 파일을 생성해주세요. (CommonJS 방식 `module.exports` 사용)
-
-    ```javascript
-    // backend/mountainStations.js
-    const mountainStationsData = [
-        // 프론트엔드(src/components/VWorldMap/mountainStations.js)의
-        // mountainStationsData 배열 내용을 여기에 그대로 복사
-        { obsid: 1890, name: "파주 필봉산", latitude: 37.78, longitude: 126.92, area: "경기도" },
-        // ... (이하 모든 관측소 데이터)
-    ];
-
-    module.exports = { mountainStationsData };
-    ```
-
----
-
 ## 💧 프론트엔드 설정
 
 React 애플리케이션 실행을 위한 설정입니다.
@@ -144,32 +113,6 @@ React 애플리케이션 실행을 위한 설정입니다.
     npm install
     ```
 
-3.  **Firebase 웹 구성 파일 생성**  !생략!
-    `src/components/` 폴더 내에 `firebaseConfig.js` 파일을 생성하고, Firebase 콘솔에서 확인한 **웹 앱**의 구성 정보를 아래 형식에 맞게 붙여넣습니다. `weatherService.js`에서 이 파일을 사용합니다.
-
-    ```javascript
-    // src/components/firebaseConfig.js
-
-    import { initializeApp } from "firebase/app";
-    import { getDatabase } from "firebase/database";
-
-    // Your web app's Firebase configuration
-    const firebaseConfig = {
-      apiKey: "YOUR_API_KEY",
-      authDomain: "YOUR_AUTH_DOMAIN",
-      databaseURL: "[https://ljg2020315018-default-rtdb.firebaseio.com/](https://ljg2020315018-default-rtdb.firebaseio.com/)", // 본인 DB URL로 수정
-      projectId: "YOUR_PROJECT_ID",
-      storageBucket: "YOUR_STORAGE_BUCKET",
-      messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-      appId: "YOUR_APP_ID"
-    };
-
-    // Initialize Firebase
-    const app = initializeApp(firebaseConfig);
-    export const database = getDatabase(app);
-    ```
-
----
 
 ## 🚀 실행 방법
 
