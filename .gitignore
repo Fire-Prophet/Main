@@ -70,3 +70,4 @@ coverage.xml
 # Node modules
 Project/backend/node_modules/
 Project/firefighter/node_modules/
+Project/backend/serviceAccountKey.json
