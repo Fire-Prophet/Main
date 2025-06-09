@@ -199,6 +199,7 @@ const VWorldMap = () => {
                     featureProjection: olMapRef.current.getView().getProjection()
                 });
                 predictionSourceRef.current.addFeatures(resultFeatures);
+                console.log('Number of features added to prediction source:', predictionSourceRef.current.getFeatures().length); // <--- 이 줄 추가
                 setSimulationTime(0);
             }
         } catch (error) {
