@@ -1,8 +1,10 @@
-// /services/simulationService.js
 
 const turf = require('@turf/turf');
 const db = require('../firebaseAdmin');
 const { mountainStationsData } = require('../mountainStations');
+
+// 인메모리 캐시 선언
+const simulationCache = new Map();
 
 // 상수 정의
 const KOREA_GRID_TABLE = 'imported_fire_data_auto';
@@ -137,6 +139,13 @@ const findNeighbors = (currentPoint, allPoints) => {
  * @returns {Promise<Array<object>>} 시뮬레이션 결과가 포함된 GeoJSON Feature 배열
  */
 const runFireSpreadPrediction = async (pool, ignition_id) => {
+    // 1. 캐시 확인
+    if (simulationCache.has(ignition_id)) {
+        console.log(`Cache hit for ignition_id: ${ignition_id}. Returning cached result.`);
+        return simulationCache.get(ignition_id);
+    }
+    console.log(`Cache miss for ignition_id: ${ignition_id}. Running simulation.`);
+
     const startTime = Date.now();
     let connection;
     try {
@@ -176,7 +185,12 @@ const runFireSpreadPrediction = async (pool, ignition_id) => {
             const currentPoint = pointMap.get(currentPointId);
             const currentResult = simResults.get(currentPointId);
             
-            if (currentResult.ignitionTime > 6 * 3600) continue; // 6시간 이상 시뮬레이션 중단
+            console.log(`Processing point: ${currentPointId}, ignitionTime: ${currentResult.ignitionTime}`); // Added log
+
+            if (currentResult.ignitionTime > 12 * 3600) { // Changed from 6 * 3600 to 12 * 3600
+                console.log(`Point ${currentPointId} exceeded max simulation time (12 hours). Skipping.`); // Updated log message
+                continue;
+            }
 
             const neighborIds = findNeighbors(currentPoint, allPoints);
 
@@ -184,17 +198,24 @@ const runFireSpreadPrediction = async (pool, ignition_id) => {
                 const neighbor = pointMap.get(neighborId);
                 const neighborResult = simResults.get(neighborId);
 
-                if (neighborResult.ignitionTime != null) continue; // 이미 불이 붙은 곳은 건너뜀
+                if (neighborResult.ignitionTime != null) {
+                    // console.log(`Neighbor ${neighborId} already ignited. Skipping.`); // Optional: too verbose
+                    continue; 
+                }
 
                 // 4-1. 이웃 지점의 물리적 특성 계산
                 const fuelScore = getFuelScore(neighbor.imsangdo_frtp_cd);
-                if (fuelScore === 0) continue; // 탈 것이 없는 곳은 건너뜀
+                if (fuelScore === 0) {
+                    console.log(`Neighbor ${neighborId} has no fuel (fuelScore: 0). Skipping.`); // Added log
+                    continue; 
+                }
 
                 const distance = turf.distance(currentPoint.coordinates, neighbor.coordinates);
                 
                 // 4-2. 방지턱 및 비화 규칙 적용
                 if (distance > FIREBREAK_DISTANCE_KM && windSpeed < STRONG_WIND_MS) {
-                    continue; // 바람이 약하면 방지턱 통과 불가
+                    console.log(`Neighbor ${neighborId} skipped due to firebreak (distance: ${distance.toFixed(2)}km, windSpeed: ${windSpeed}m/s).`); // Added log
+                    continue; 
                 }
 
                 const bearing = turf.bearing(currentPoint.coordinates, neighbor.coordinates);
@@ -204,33 +225,56 @@ const runFireSpreadPrediction = async (pool, ignition_id) => {
 
                 // 비화 시 페널티 적용
                 if (distance > FIREBREAK_DISTANCE_KM) {
+                    console.log(`Applying spotting penalty for neighbor ${neighborId} (distance: ${distance.toFixed(2)}km).`); // Added log
                     slopeFactor = Math.pow(slopeFactor, 0.5); 
                     moistureFactor = Math.pow(moistureFactor, 0.5);
                 }
 
                 // 4-3. 최종 확산 속도(ROS) 및 시간 계산
                 const rosScore = fuelScore * slopeFactor * moistureFactor * windFactor;
-                if (rosScore < 2) continue; // 확산력이 너무 약하면 전파 안됨
+                console.log(`Neighbor ${neighborId} - Fuel: ${fuelScore}, Slope: ${slopeFactor.toFixed(2)}, Moisture: ${moistureFactor.toFixed(2)}, Wind: ${windFactor.toFixed(2)}, ROS: ${rosScore.toFixed(2)}`); // Added log
 
-                const timeToTravel = (distance * 3600) / rosScore;
+                if (rosScore < 1) { // Changed from rosScore < 2 to rosScore < 1
+                    console.log(`Neighbor ${neighborId} has low ROS (${rosScore.toFixed(2)}). Skipping.`); // Added log
+                    continue;
+                }
+
+                const timeToTravel = (distance * 3600) / rosScore; // distance in km, ROS in km/hr -> time in seconds
                 const newIgnitionTime = currentResult.ignitionTime + timeToTravel;
+                
+                console.log(`Neighbor ${neighborId} - Distance: ${distance.toFixed(2)}km, TimeToTravel: ${timeToTravel.toFixed(2)}s, NewIgnitionTime: ${newIgnitionTime.toFixed(2)}s`); // Added log
+
 
                 // 4-4. 이웃 지점 발화 정보 업데이트 및 이벤트 큐에 추가
                 if (newIgnitionTime < (neighborResult.ignitionTime ?? Infinity)) {
+                    console.log(`Igniting neighbor ${neighborId} at ${newIgnitionTime.toFixed(2)}s.`); // Added log
                     neighborResult.ignitionTime = newIgnitionTime;
                     neighborResult.burnoutTime = newIgnitionTime + getBurnoutDuration(fuelScore, humidity, distance);
                     eventQueue.enqueue(neighborId, newIgnitionTime);
+                } else {
+                    console.log(`Neighbor ${neighborId} not ignited. NewTime (${newIgnitionTime.toFixed(2)}) vs ExistingTime (${neighborResult.ignitionTime ?? 'Infinity'})`); // Added log
                 }
             }
         }
         
         console.log(` -> 시뮬레이션 루프 종료. 총 소요 시간: ${(Date.now() - startTime)/1000}초`);
         // 5. 시뮬레이션 최종 결과 반환
-        return allPoints.map(p => ({
-            type: 'Feature', 
-            geometry: { type: 'Point', coordinates: p.coordinates },
-            properties: { id: p.id, ...simResults.get(p.id) }
-        }));
+        //    - ignitionTime이 null이 아닌 (즉, 발화한) 지점들만 필터링하여 반환
+        const ignitedFeatures = allPoints
+            .filter(p => simResults.get(p.id).ignitionTime !== null)
+            .map(p => ({
+                type: 'Feature', 
+                geometry: { type: 'Point', coordinates: p.coordinates },
+                properties: { id: p.id, ...simResults.get(p.id) }
+            }));
+        
+        console.log(`Returning ${ignitedFeatures.length} ignited features out of ${allPoints.length} total points.`); // Added log for count
+
+        // 6. 결과를 캐시에 저장
+        simulationCache.set(ignition_id, ignitedFeatures);
+        console.log(`Stored result for ignition_id: ${ignition_id} in cache.`);
+
+        return ignitedFeatures; // Reverted: Return the array directly
     } finally {
         if (connection) connection.release();
     }
