@@ -187,8 +187,8 @@ const runFireSpreadPrediction = async (pool, ignition_id) => {
             
             console.log(`Processing point: ${currentPointId}, ignitionTime: ${currentResult.ignitionTime}`); // Added log
 
-            if (currentResult.ignitionTime > 12 * 3600) { // Changed from 6 * 3600 to 12 * 3600
-                console.log(`Point ${currentPointId} exceeded max simulation time (12 hours). Skipping.`); // Updated log message
+            if (currentResult.ignitionTime > 7 * 3600) { // Changed from 12 * 3600 to 7 * 3600
+                console.log(`Point ${currentPointId} exceeded max simulation time (7 hours). Skipping.`); // Updated log message
                 continue;
             }
 
@@ -274,7 +274,7 @@ const runFireSpreadPrediction = async (pool, ignition_id) => {
         const timeStep = 600; // 10분 간격 (초)
         // 실제 시뮬레이션된 최대 발화 시간 또는 설정된 최대 시뮬레이션 시간을 기준으로 루프
         const maxIgnitionTime = ignitedFeatures.reduce((max, f) => Math.max(max, f.properties.ignitionTime || 0), 0);
-        const effectiveMaxSimTime = Math.max(maxIgnitionTime, 12 * 3600); // 최소 12시간 또는 실제 최대 발화 시간까지 커버
+        const effectiveMaxSimTime = Math.max(maxIgnitionTime, 7 * 3600); // 최소 7시간 또는 실제 최대 발화 시간까지 커버
 
         for (let t = 0; t <= effectiveMaxSimTime; t += timeStep) {
             const pointsIgnitedByTimeT = ignitedFeatures.filter(f => 
