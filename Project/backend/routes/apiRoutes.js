@@ -13,8 +13,8 @@ router.post('/predict-fire-spread', async (req, res) => {
         return res.status(400).json({ error: '발화점 ID가 누락되었습니다.' });
     }
     try {
-        const features = await runFireSpreadPrediction(pool, ignition_id);
-        res.json({ type: 'FeatureCollection', features });
+        const result = await runFireSpreadPrediction(pool, ignition_id); // Changed 'features' to 'result'
+        res.json(result); // Send the entire result object
     } catch (err) {
         console.error('[API /predict-fire-spread] 오류:', err);
         res.status(500).json({ error: '서버 내부 오류가 발생했습니다.' });

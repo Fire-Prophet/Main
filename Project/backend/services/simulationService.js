@@ -1,4 +1,3 @@
-
 const turf = require('@turf/turf');
 const db = require('../firebaseAdmin');
 const { mountainStationsData } = require('../mountainStations');
@@ -140,11 +139,12 @@ const findNeighbors = (currentPoint, allPoints) => {
  */
 const runFireSpreadPrediction = async (pool, ignition_id) => {
     // 1. 캐시 확인
-    if (simulationCache.has(ignition_id)) {
-        console.log(`Cache hit for ignition_id: ${ignition_id}. Returning cached result.`);
-        return simulationCache.get(ignition_id);
+    const cacheKey = `prediction-${ignition_id}`; // 캐시 키 명확화
+    if (simulationCache.has(cacheKey)) {
+        console.log(`Cache hit for ${cacheKey}. Returning cached result.`);
+        return simulationCache.get(cacheKey);
     }
-    console.log(`Cache miss for ignition_id: ${ignition_id}. Running simulation.`);
+    console.log(`Cache miss for ${cacheKey}. Running simulation.`);
 
     const startTime = Date.now();
     let connection;
@@ -258,23 +258,72 @@ const runFireSpreadPrediction = async (pool, ignition_id) => {
         }
         
         console.log(` -> 시뮬레이션 루프 종료. 총 소요 시간: ${(Date.now() - startTime)/1000}초`);
-        // 5. 시뮬레이션 최종 결과 반환
-        //    - ignitionTime이 null이 아닌 (즉, 발화한) 지점들만 필터링하여 반환
+        
         const ignitedFeatures = allPoints
             .filter(p => simResults.get(p.id).ignitionTime !== null)
             .map(p => ({
-                type: 'Feature', 
+                type: 'Feature',
                 geometry: { type: 'Point', coordinates: p.coordinates },
                 properties: { id: p.id, ...simResults.get(p.id) }
             }));
         
-        console.log(`Returning ${ignitedFeatures.length} ignited features out of ${allPoints.length} total points.`); // Added log for count
+        console.log(`Returning ${ignitedFeatures.length} ignited features out of ${allPoints.length} total points.`);
+
+        // 시간대별 경계 생성
+        const timeBoundaries = [];
+        const timeStep = 600; // 10분 간격 (초)
+        // 실제 시뮬레이션된 최대 발화 시간 또는 설정된 최대 시뮬레이션 시간을 기준으로 루프
+        const maxIgnitionTime = ignitedFeatures.reduce((max, f) => Math.max(max, f.properties.ignitionTime || 0), 0);
+        const effectiveMaxSimTime = Math.max(maxIgnitionTime, 12 * 3600); // 최소 12시간 또는 실제 최대 발화 시간까지 커버
+
+        for (let t = 0; t <= effectiveMaxSimTime; t += timeStep) {
+            const pointsIgnitedByTimeT = ignitedFeatures.filter(f => 
+                f.properties.ignitionTime !== null && f.properties.ignitionTime <= t
+            );
+
+            if (pointsIgnitedByTimeT.length >= 3) {
+                try {
+                    const pointsForHull = turf.featureCollection(pointsIgnitedByTimeT.map(f => turf.point(f.geometry.coordinates)));
+                    const hull = turf.convex(pointsForHull);
+                    if (hull) {
+                        timeBoundaries.push({ time: t, polygon: hull });
+                    }
+                } catch (error) {
+                    console.error(`Error calculating convex hull at time ${t}:`, error);
+                }
+            } else if (pointsIgnitedByTimeT.length > 0) {
+                // 점이 1~2개일 경우, 작은 버퍼를 생성하여 폴리곤으로 표현
+                try {
+                    const bufferedFeatures = pointsIgnitedByTimeT.map(f => turf.buffer(f, 0.01, { units: 'kilometers' })); // 10m 버퍼
+                    let combinedPolygon = bufferedFeatures[0];
+                    if (bufferedFeatures.length === 2) {
+                        // turf.union은 GeoJSON Feature를 받으므로, geometry를 직접 사용하지 않도록 주의
+                        const unionResult = turf.union(bufferedFeatures[0], bufferedFeatures[1]);
+                        if (unionResult) combinedPolygon = unionResult;
+                    }
+                    // properties가 없는 Feature를 생성할 수 있으므로, turf.feature로 감싸줌
+                    if (combinedPolygon && combinedPolygon.geometry) {
+                         timeBoundaries.push({ time: t, polygon: turf.feature(combinedPolygon.geometry) });
+                    } else if (combinedPolygon) { // 이미 Feature 형태일 경우
+                         timeBoundaries.push({ time: t, polygon: combinedPolygon });
+                    }
+                } catch (bufferError) {
+                    console.error(`Error creating buffer/union for 1-2 points at time ${t}:`, bufferError);
+                }
+            }
+        }
+        console.log(`Generated ${timeBoundaries.length} time-series boundaries.`);
+
+        const result = {
+            features: ignitedFeatures,    // 모든 점 피처
+            timeBoundaries: timeBoundaries // 시간대별 경계 폴리곤 배열
+        };
 
         // 6. 결과를 캐시에 저장
-        simulationCache.set(ignition_id, ignitedFeatures);
-        console.log(`Stored result for ignition_id: ${ignition_id} in cache.`);
+        simulationCache.set(cacheKey, result);
+        console.log(`Stored result for ${cacheKey} in cache.`);
 
-        return ignitedFeatures; // Reverted: Return the array directly
+        return result;
     } finally {
         if (connection) connection.release();
     }
