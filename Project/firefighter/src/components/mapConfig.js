@@ -117,7 +117,7 @@ export const logicalLayersConfig = [
         name: '연료 등급 지도',
         type: 'fuel_rating',
         url: 'http://localhost:3001/api/grid-with-fuel-info',
-        visible: true, // [수정] true로 변경하여 기본 활성화
+        visible: false, // [수정] true로 변경하여 기본 활성화
         isCollapsibleLegend: true,
         defaultCollapsed: false,
         legendInfo: {
@@ -139,7 +139,7 @@ export const logicalLayersConfig = [
         name: '전국 격자 데이터',
         type: 'mapped_grid_data_vector', 
         url: 'http://localhost:3001/api/mapped-grid-data', 
-        visible: true, 
+        visible: false, 
         isCollapsibleLegend: true,
         defaultCollapsed: false,
         legendInfo: {
