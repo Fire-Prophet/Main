@@ -1,5 +1,3 @@
-// src/components/Legend.js (수정된 파일)
-
 import React, { useState, useRef, useEffect } from 'react';
 
 const Legend = ({
@@ -139,10 +137,33 @@ const Legend = ({
                             <div style={{ paddingLeft: '10px', fontSize: '11px', marginTop: '5px' }}>
                                 {description && <p style={{ fontStyle: 'italic', color: '#555', margin: '2px 0 8px 0' }}>{description}</p>}
                                 
-                                {type === 'simple_point_legend' && style && ( <div style={{ display: 'flex', alignItems: 'center' }}> <span style={{...colorSwatchStyle, backgroundColor: style.color, borderRadius: '50%' }}></span> <span>{legendInfo.description || '표시 지점'}</span> </div> )}
-                                {type === 'colormap_fire_spread' && colors && legendDescriptions && ( Object.entries(colors).map(([key, colorValue]) => ( <div key={key} style={{ display: 'flex', alignItems: 'center', marginBottom: '4px' }}> <span style={{...colorSwatchStyle, backgroundColor: colorValue }}></span> <span>{legendDescriptions[key]}</span> </div> )) )}
+                                {type === 'simple_point_legend' && style && (
+                                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                                        <span style={{...colorSwatchStyle, backgroundColor: style.color, borderRadius: '50%' }}></span>
+                                        <span>{legendInfo.description || '표시 지점'}</span>
+                                    </div>
+                                )}
                                 
-                                {/* [수정] 토양도(soil) 타입에 대한 범례 렌더링 로직 추가 */}
+                                {type === 'colormap_fire_spread' && colors && legendDescriptions && (
+                                    Object.entries(colors).map(([key, colorValue]) => (
+                                        <div key={key} style={{ display: 'flex', alignItems: 'center', marginBottom: '4px' }}>
+                                            <span style={{...colorSwatchStyle, backgroundColor: colorValue }}></span>
+                                            <span>{legendDescriptions[key]}</span>
+                                        </div>
+                                    ))
+                                )}
+                                
+                                {type === 'fuel_rating_legend' && colors && legendDescriptions && (
+                                    Object.entries(colors)
+                                        .sort(([keyA], [keyB]) => keyB - keyA)
+                                        .map(([key, colorValue]) => (
+                                            <div key={key} style={{ display: 'flex', alignItems: 'center', marginBottom: '4px' }}>
+                                                <span style={{...colorSwatchStyle, backgroundColor: colorValue }}></span>
+                                                <span>{legendDescriptions[key]}</span>
+                                            </div>
+                                        ))
+                                )}
+                                
                                 {(type === 'soil' || type === 'imsangdo') && colorMap && codeDescriptions && (
                                     Object.entries(colorMap).map(([key, colorValue]) => (
                                         <div key={key} style={{ display: 'flex', alignItems: 'center', marginBottom: '4px' }}>
