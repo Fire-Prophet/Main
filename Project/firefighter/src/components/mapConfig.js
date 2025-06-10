@@ -62,6 +62,23 @@ export const mountainMarkerLegendInfo = {
     styleProps: { image: { type: 'circle', radius: 7, fill: { color: 'rgba(0, 128, 0, 0.8)' }, stroke: { color: 'white', width: 1.5 } } }
 };
 
+// [추가] 연료 등급별 색상 및 범례 정보
+export const fuelRatingColorMap = {
+    5: '#d73027', // 침엽수림 (매우 높음)
+    4: '#fc8d59', // 혼효림 (높음)
+    3: '#fee08b', // 활엽수림 (중간)
+    2: '#d9ef8b', // 죽림 (낮음)
+    0: 'rgba(200, 200, 200, 0.5)', // 비산림/기타 (해당 없음)
+};
+export const fuelRatingDescriptions = {
+    5: '등급 5 (침엽수림 - 매우 높음)',
+    4: '등급 4 (혼효림 - 높음)',
+    3: '등급 3 (활엽수림 - 중간)',
+    2: '등급 2 (죽림 - 낮음)',
+    0: '등급 0 (비산림/기타)',
+};
+
+
 // 논리적인 레이어 그룹 설정
 export const logicalLayersConfig = [
     // [추가] 아산천안 토양도 레이어 설정
@@ -95,6 +112,22 @@ export const logicalLayersConfig = [
         isCollapsibleLegend: false, 
         legendInfo: hikingTrailLegendInfo 
     },
+    // [추가] 연료 등급 지도 레이어 설정
+    {
+        name: '연료 등급 지도',
+        type: 'fuel_rating',
+        url: 'http://localhost:3001/api/grid-with-fuel-info',
+        visible: true, // [수정] true로 변경하여 기본 활성화
+        isCollapsibleLegend: true,
+        defaultCollapsed: false,
+        legendInfo: {
+            title: '연료 등급',
+            type: 'fuel_rating_legend',
+            colors: fuelRatingColorMap,
+            descriptions: fuelRatingDescriptions,
+        }
+    },
+    
     {
         name: '산악기상관측소 마커',
         type: 'mountain_station_markers',
