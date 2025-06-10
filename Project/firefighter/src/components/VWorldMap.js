@@ -1,5 +1,3 @@
-// src/components/VWorldMap.js (수정된 파일)
-
 import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { Map, View, Feature } from 'ol';
 import { Point } from 'ol/geom';
@@ -17,13 +15,13 @@ import {
     logicalLayersConfig as initialLogicalLayersConfig,
     fireSpreadColors,
     mountainMarkerStyle,
-    hikingTrailStyle
+    hikingTrailStyle,
+    fuelRatingColorMap
 } from './mapConfig';
 import Legend from './Legend';
 import { mountainStationsData } from './mountainStations';
 import { subscribeToStationWeather } from './weatherService';
 
-// ... WeatherDisplay 컴포넌트 코드는 이전과 동일 ...
 const WeatherDisplay = ({ selectedStationInfo }) => {
     const [weatherInfo, setWeatherInfo] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
@@ -81,9 +79,7 @@ const WeatherDisplay = ({ selectedStationInfo }) => {
     );
 };
 
-
 const VWorldMap = () => {
-    // ... useRef, useState 등 상단 선언부 ...
     const mapContainerRef = useRef(null);
     const olMapRef = useRef(null);
     const layerRefs = useRef({});
@@ -106,12 +102,12 @@ const VWorldMap = () => {
         return initialVisibility;
     });
 
-    // [수정] 토양도 투명도 상태 추가
     const [layerOpacities, setLayerOpacities] = useState({
         '산불 확산 시뮬레이션': 1,
         '아산천안 임상도': 1,
         '등산로': 1,
         '아산천안 토양도': 1,
+        '연료 등급 지도': 0.8,
     });
     
     const [collapsedLegends, setCollapsedLegends] = useState(() => {
@@ -133,10 +129,22 @@ const VWorldMap = () => {
     const [activeTimeBoundaries, setActiveTimeBoundaries] = useState(null);
     const MAX_SIM_TIME = 6 * 3600;
 
-    // ... (useMemo, useCallback 등 스타일 함수 선언부는 이전과 동일) ...
     useEffect(() => {
         simulationTimeRef.current = simulationTime;
     }, [simulationTime]);
+
+    const fuelRatingStyleFunction = useCallback((feature) => {
+        const fuelScore = feature.get('fuel_score'); 
+        const color = fuelRatingColorMap[fuelScore] ?? 'rgba(0, 0, 0, 0)';
+
+        return new Style({
+            image: new CircleStyle({
+                radius: 2.5,
+                fill: new Fill({ color: color }),
+            }),
+        });
+    }, []);
+
     const transparentStyle = useMemo(() => new Style({ image: new CircleStyle({ radius: 3.5, fill: new Fill({ color: 'rgba(0,0,0,0)' }) }) }), []);
     const burnedOutStyle = useMemo(() => new Style({ image: new CircleStyle({ radius: 3.5, fill: new Fill({ color: fireSpreadColors.burned_out }) }) }), []);
     const burningStyle = useMemo(() => new Style({ image: new CircleStyle({ radius: 3.5, fill: new Fill({ color: fireSpreadColors.burning }) }) }), []);
@@ -180,8 +188,25 @@ const VWorldMap = () => {
         logicalLayersConfig.forEach(groupConfig => {
             let layerObject;
             
-            // [수정] 토양도 타입(soil)에 대한 분기 로직 추가
-            if (groupConfig.type === 'soil' || groupConfig.type === 'imsangdo') {
+            if (groupConfig.type === 'fuel_rating') {
+                const vectorSource = new VectorSource({});
+                layerObject = new VectorLayer({
+                    source: vectorSource,
+                    style: fuelRatingStyleFunction,
+                    visible: groupConfig.visible,
+                    opacity: layerOpacities[groupConfig.name] || 1,
+                });
+                fetch(groupConfig.url)
+                    .then(res => res.json())
+                    .then(geojson => {
+                        const features = new GeoJSON().readFeatures(geojson, {
+                            dataProjection: 'EPSG:4326',
+                            featureProjection: map.getView().getProjection()
+                        });
+                        vectorSource.addFeatures(features);
+                    }).catch(console.error);
+                map.addLayer(layerObject);
+            } else if (groupConfig.type === 'soil' || groupConfig.type === 'imsangdo') {
                 const wmsLayers = [];
                 if(groupConfig.layerNames && Array.isArray(groupConfig.layerNames)){
                     groupConfig.layerNames.forEach(individualLayerName => {
@@ -247,9 +272,9 @@ const VWorldMap = () => {
         });
         layerRefs.current = currentLayerObjects;
 
-        // ... (이하 map.on('click') 등 나머지 코드는 이전과 동일) ...
         map.on('click', async (event) => {
             if (isSimulating) return;
+            
             const stationLayer = layerRefs.current['산악기상관측소 마커'];
             let stationClicked = false;
             if (stationLayer && stationLayer.getVisible()) {
@@ -261,6 +286,7 @@ const VWorldMap = () => {
                 }, { hitTolerance: 5 });
             }
             if (stationClicked) return;
+
             const gridLayer = layerRefs.current['전국 격자 데이터'];
             if (!gridLayer || !gridLayer.getVisible()) return;
             const features = map.getFeaturesAtPixel(event.pixel, { layerFilter: l => l === gridLayer, hitTolerance: 5 });
@@ -272,6 +298,7 @@ const VWorldMap = () => {
                 }
             }
         });
+
         return () => { if (olMapRef.current) { olMapRef.current.dispose(); olMapRef.current = null; }};
     }, []);
 
@@ -302,7 +329,9 @@ const VWorldMap = () => {
     }, [layerOpacities]);
 
     useEffect(() => { if (predictionLayerRef.current) { predictionLayerRef.current.setStyle(predictionPointStyleFunction); } }, [predictionPointStyleFunction]);
+    
     useEffect(() => { if (predictionSourceRef.current && predictionSourceRef.current.getFeatures().length > 0 && simulationDataRef.current) { predictionSourceRef.current.changed(); } }, [simulationTime]);
+    
     useEffect(() => {
         if (!activeTimeBoundaries || !olMapRef.current) { if (boundarySourceRef.current) { boundarySourceRef.current.clear(); setCurrentBoundaryFeature(null); } return; }
         const timeBoundaries = activeTimeBoundaries;
@@ -323,15 +352,32 @@ const VWorldMap = () => {
             }
         }
     }, [simulationTime, activeTimeBoundaries]);
+
     const handleRunSimulation = useCallback(async (ignitionId) => {
-        setIsSimulating(true); setSimulationError(null); predictionSourceRef.current?.clear(); boundarySourceRef.current?.clear(); simulationDataRef.current = null; setActiveTimeBoundaries(null); setCurrentBoundaryFeature(null); setSimulationTime(0);
-        if (layerRefs.current['전국 격자 데이터']) { layerRefs.current['전국 격자 데이터'].setVisible(false); }
+        setIsSimulating(true); 
+        setSimulationError(null); 
+        predictionSourceRef.current?.clear(); 
+        boundarySourceRef.current?.clear(); 
+        simulationDataRef.current = null; 
+        setActiveTimeBoundaries(null); 
+        setCurrentBoundaryFeature(null); 
+        setSimulationTime(0);
+        if (layerRefs.current['전국 격자 데이터']) { 
+            layerRefs.current['전국 격자 데이터'].setVisible(false); 
+        }
         try {
             const response = await fetch('http://localhost:3001/api/predict-fire-spread', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ignition_id: ignitionId }) });
-            if (!response.ok) { const errData = await response.json(); throw new Error(errData.error || '시뮬레이션 API 요청 실패'); }
+            if (!response.ok) { 
+                const errData = await response.json(); 
+                throw new Error(errData.error || '시뮬레이션 API 요청 실패'); 
+            }
             const results = await response.json();
             simulationDataRef.current = results;
-            if (results && results.timeBoundaries) { setActiveTimeBoundaries(results.timeBoundaries); } else { setActiveTimeBoundaries(null); }
+            if (results && results.timeBoundaries) { 
+                setActiveTimeBoundaries(results.timeBoundaries); 
+            } else { 
+                setActiveTimeBoundaries(null); 
+            }
             if (results && results.features && Array.isArray(results.features)) {
                 const geoJsonInput = { type: 'FeatureCollection', features: results.features };
                 const mapProjection = olMapRef.current.getView().getProjection();
@@ -339,36 +385,62 @@ const VWorldMap = () => {
                 try {
                     pointFeatures = new GeoJSON().readFeatures(geoJsonInput, { dataProjection: 'EPSG:4326', featureProjection: mapProjection });
                     predictionSourceRef.current.addFeatures(pointFeatures);
-                } catch (error) { console.error('[FE] Error during GeoJSON().readFeatures() or addFeatures():', error); }
+                } catch (error) { 
+                    console.error('[FE] Error during GeoJSON().readFeatures() or addFeatures():', error); 
+                }
             }
-            if (results && ((results.features && results.features.length > 0) || (results.timeBoundaries && results.timeBoundaries.length > 0))) { setSimulationTime(0); }
-        } catch (error) { console.error("Simulation Error:", error); setSimulationError(error.message); }
-        finally { setIsSimulating(false); }
+            if (results && ((results.features && results.features.length > 0) || (results.timeBoundaries && results.timeBoundaries.length > 0))) { 
+                setSimulationTime(0); 
+            }
+        } catch (error) { 
+            console.error("Simulation Error:", error); 
+            setSimulationError(error.message); 
+        } finally { 
+            setIsSimulating(false); 
+        }
     }, []);
+    
     const formatTime = (elapsedSeconds) => {
         const displayHours = Math.floor(elapsedSeconds / 3600);
         const displayMinutes = Math.floor((elapsedSeconds % 3600) / 60);
         return `${String(displayHours).padStart(2, '0')}시간 ${String(displayMinutes).padStart(2, '0')}분`;
     };
+
     const handleSliderChange = useCallback((newTimeNumeric) => {
-        if (sliderUpdateTimeoutRef.current) { clearTimeout(sliderUpdateTimeoutRef.current); }
-        sliderUpdateTimeoutRef.current = setTimeout(() => { setSimulationTime(newTimeNumeric); }, 300);
+        if (sliderUpdateTimeoutRef.current) { 
+            clearTimeout(sliderUpdateTimeoutRef.current); 
+        }
+        sliderUpdateTimeoutRef.current = setTimeout(() => { 
+            setSimulationTime(newTimeNumeric); 
+        }, 300);
     }, []);
+
     const resetSimulation = () => {
-        predictionSourceRef.current?.clear(); boundarySourceRef.current?.clear(); simulationDataRef.current = null; setActiveTimeBoundaries(null); setCurrentBoundaryFeature(null);
-        setSimulationTime(0); setSimulationError(null); setIsSimulating(false);
-        if (layerRefs.current['전국 격자 데이터']) { layerRefs.current['전국 격자 데이터'].setVisible(true); }
+        predictionSourceRef.current?.clear(); 
+        boundarySourceRef.current?.clear(); 
+        simulationDataRef.current = null; 
+        setActiveTimeBoundaries(null); 
+        setCurrentBoundaryFeature(null);
+        setSimulationTime(0); 
+        setSimulationError(null); 
+        setIsSimulating(false);
+        if (layerRefs.current['전국 격자 데이터']) { 
+            layerRefs.current['전국 격자 데이터'].setVisible(true); 
+        }
         setSelectedStation(null);
     };
+
     const handleToggleVisibility = useCallback((name) => {
         setLayerVisibility(prev => ({...prev, [name]: !prev[name]}));
         if (name === '산악기상관측소 마커' && layerVisibility[name]) {
             setSelectedStation(null);
         }
     }, [layerVisibility]);
+
     const handleOpacityChange = useCallback((name, opacity) => {
         setLayerOpacities(prev => ({...prev, [name]: opacity}));
     }, []);
+
     const handleToggleLegendCollapse = useCallback((name) => {
         setCollapsedLegends(p => ({ ...p, [name]: !p[name] }));
     }, []);
@@ -376,8 +448,14 @@ const VWorldMap = () => {
     return (
         <div style={{ position: 'relative', width: '100%', height: '100vh' }}>
             <div ref={mapContainerRef} style={{ width: '100%', height: '100%' }}></div>
+            
             <WeatherDisplay selectedStationInfo={selectedStation} />
-            <div style={{ position: 'absolute', bottom: '20px', left: '50%', transform: 'translateX(-50%)', backgroundColor: 'rgba(255, 255, 255, 0.9)', padding: '15px', borderRadius: '8px', boxShadow: '0 2px 10px rgba(0,0,0,0.2)', zIndex: 1000, width: '70%', maxWidth: '800px' }}>
+            
+            <div style={{
+                position: 'absolute', bottom: '20px', left: '50%', transform: 'translateX(-50%)',
+                backgroundColor: 'rgba(255, 255, 255, 0.9)', padding: '15px', borderRadius: '8px',
+                boxShadow: '0 2px 10px rgba(0,0,0,0.2)', zIndex: 1000, width: '70%', maxWidth: '800px'
+            }}>
                 <div style={{display: 'flex', alignItems: 'center', gap: '15px'}}>
                     <b style={{fontSize: '14px', minWidth: '110px'}}>시간: {formatTime(simulationTime)}</b>
                     <input type="range" min="0" max={MAX_SIM_TIME} step="600" value={simulationTime} onChange={(e) => handleSliderChange(Number(e.target.value))} style={{ flexGrow: 1, cursor: 'pointer' }} disabled={!predictionSourceRef.current || predictionSourceRef.current.getFeatures().length === 0}/>
@@ -391,6 +469,7 @@ const VWorldMap = () => {
                 {isSimulating && <p style={{color: 'blue', textAlign: 'center', margin: '10px 0 0 0'}}>시뮬레이션 계산 중...</p>}
                 {simulationError && <p style={{color: 'red', textAlign: 'center', margin: '10px 0 0 0'}}>오류: {simulationError}</p>}
             </div>
+            
             <Legend
                 logicalLayersConfig={logicalLayersConfig}
                 layerVisibility={layerVisibility}
