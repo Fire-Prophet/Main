@@ -21,6 +21,7 @@ const ONE_GRID_UNIT_KM = 1.2;      // 격자 한 칸의 기준 거리
  */
 const getFuelScore = (imsangdoCode) => imsangdoCode ? ({'1':5,'3':4,'2':3,'4':2}[imsangdoCode] ?? 0) : 0;
 
+
 /**
  * 토양지형그룹코드를 기반으로 경사도 요인을 반환합니다.
  * 오르막에서는 가중치를, 내리막에서는 페널티를 부여합니다.
@@ -349,4 +350,31 @@ const getGridData = async (pool) => {
     }
 };
 
-module.exports = { runFireSpreadPrediction, getGridData };
+
+
+
+// [추가] 미리 계산된 연료 등급 데이터를 DB에서 가져오는 함수
+const getGridWithFuelInfo = async (pool) => {
+    let connection;
+    try {
+        connection = await pool.getConnection();
+        // 두 테이블을 JOIN하여 위경도 정보와 미리 계산된 연료 점수를 함께 가져옵니다.
+        const sql = `
+            SELECT 
+                t1.id, 
+                t1.lat, 
+                t1.lng, 
+                t2.fuel_score 
+            FROM 
+                imported_fire_data_auto AS t1
+            JOIN 
+                grid_fuel_ratings AS t2 ON t1.id = t2.grid_id
+        `;
+        const [rows] = await connection.query(sql);
+        return rows;
+    } finally {
+        if (connection) connection.release();
+    }
+};
+
+module.exports = { runFireSpreadPrediction, getGridData, getFuelScore, getGridWithFuelInfo };
