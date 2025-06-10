@@ -296,39 +296,30 @@ const runFireSpreadPrediction = async (pool, ignition_id) => {
                 // 점이 1~2개일 경우, 작은 버퍼를 생성하여 폴리곤으로 표현
                 try {
                     const bufferedFeatures = pointsIgnitedByTimeT.map(f => turf.buffer(f, 0.01, { units: 'kilometers' })); // 10m 버퍼
-                    let combinedPolygon = bufferedFeatures[0];
-                    if (bufferedFeatures.length === 2) {
-                        // turf.union은 GeoJSON Feature를 받으므로, geometry를 직접 사용하지 않도록 주의
-                        const unionResult = turf.union(bufferedFeatures[0], bufferedFeatures[1]);
-                        if (unionResult) combinedPolygon = unionResult;
-                    }
-                    // properties가 없는 Feature를 생성할 수 있으므로, turf.feature로 감싸줌
-                    if (combinedPolygon && combinedPolygon.geometry) {
-                         timeBoundaries.push({ time: t, polygon: turf.feature(combinedPolygon.geometry) });
-                    } else if (combinedPolygon) { // 이미 Feature 형태일 경우
+                    // [수정] union 로직을 더 안정적인 reduce 방식으로 변경
+                    let combinedPolygon = bufferedFeatures.reduce((acc, feat) => {
+                        // acc가 null(첫번째 순회)이면 현재 feat를 반환하고,
+                        // 그렇지 않으면 acc와 현재 feat를 합침
+                        if (!acc) return feat;
+                        return turf.union(acc, feat);
+                    }, null);
+
+                    if (combinedPolygon) {
                          timeBoundaries.push({ time: t, polygon: combinedPolygon });
                     }
-                } catch (bufferError) {
-                    console.error(`Error creating buffer/union for 1-2 points at time ${t}:`, bufferError);
-                }
+                } catch (bufferError) { console.error(`Error creating buffer/union for 1-2 points at time ${t}:`, bufferError); }
             }
         }
         console.log(`Generated ${timeBoundaries.length} time-series boundaries.`);
 
-        const result = {
-            features: ignitedFeatures,    // 모든 점 피처
-            timeBoundaries: timeBoundaries // 시간대별 경계 폴리곤 배열
-        };
-
-        // 6. 결과를 캐시에 저장
+        const result = { features: ignitedFeatures, timeBoundaries: timeBoundaries };
         simulationCache.set(cacheKey, result);
-        console.log(`Stored result for ${cacheKey} in cache.`);
-
         return result;
     } finally {
         if (connection) connection.release();
     }
 };
+
 
 /**
  * DB에서 지도에 표시할 전체 격자 데이터를 가져옵니다.
