@@ -239,6 +239,117 @@ app.get('/api/mapped-grid-data', async (req, res) => {
     }
 });
 
+
 app.listen(port, () => {
     console.log(`🔥 산불 예측 API 서버가 http://localhost:${port} 에서 실행 중입니다.`);
+
+
+// --- 동료 MySQL DB의 격자 데이터를 제공하는 새로운 API 엔드포인트 ---
+app.get('/api/colleague-grid-data', async (req, res) => {
+    let connection; 
+    try {
+        console.log(`[API /api/colleague-grid-data] 동료의 외부 MySQL DB 조회 시도...`);
+        connection = await colleagueDbPool.getConnection(); // 동료 DB 풀에서 커넥션 가져오기
+
+        const tableName = 'imported_fire_data_auto'; // 동료 DB의 테이블 이름
+
+        // ⭐⭐⭐ [가정] 동료의 'imported_fire_data_auto' 테이블도 'id', 'lat', 'lng' 컬럼을 사용한다고 가정합니다.
+        // 만약 컬럼명이 다르다면 아래 변수들을 실제 컬럼명으로 수정해야 합니다.
+        const idCol = 'id';    // 예: 'gid', 'objectid', 또는 실제 ID 컬럼명
+        const latCol = 'lat';  // 예: 'latitude', 'y_coord', 또는 실제 위도 컬럼명
+        const lonCol = 'lng';  // 예: 'longitude', 'x_coord', 또는 실제 경도 컬럼명
+        
+        // 가져올 다른 속성 컬럼이 있다면 아래 주석을 풀고 실제 컬럼명으로 수정합니다.
+        // const imsangdoCodeCol = 'imsangdo_FRTP_CD'; // 예시
+        // const soilCodeCol = 'soil_SLTP_CD';       // 예시
+
+        // 필요한 컬럼만 선택하도록 쿼리 수정
+        // const query = `SELECT \`${idCol}\`, \`${latCol}\`, \`${lonCol}\`, \`${imsangdoCodeCol}\`, \`${soilCodeCol}\` FROM \`${tableName}\``;
+        // 기본적으로 id, lat, lng만 가져오도록 설정. 필요시 위 주석처럼 다른 컬럼도 추가하세요.
+        const query = `SELECT \`${idCol}\`, \`${latCol}\`, \`${lonCol}\` FROM \`${tableName}\``;
+
+
+        const [rows] = await connection.query(query); // MySQL 쿼리 실행
+        console.log(`[API /api/colleague-grid-data] '${tableName}' 테이블에서 ${rows.length}개 레코드 조회 완료. GeoJSON으로 변환 중...`);
+
+        const features = rows.map(row => ({
+            type: 'Feature',
+            geometry: {
+                type: 'Point',
+                coordinates: [parseFloat(row[lonCol]), parseFloat(row[latCol])] // 경도, 위도 순서
+            },
+            properties: {
+                id: row[idCol],
+                // 만약 다른 속성도 가져왔다면 여기에 추가합니다.
+                // imsangdo_code: row[imsangdoCodeCol],
+                // soil_code: row[soilCodeCol],
+            }
+        }));
+
+        res.json({ type: 'FeatureCollection', features });
+        console.log(`[API /api/colleague-grid-data] GeoJSON 응답 전송 완료.`);
+
+    } catch (err) {
+        console.error('[API /api/colleague-grid-data] 오류:', err);
+        res.status(500).json({ error: 'External DB Error or Data Processing Error' });
+    } finally {
+        if (connection) {
+            connection.release(); 
+        }
+    }
+});
+
+// --- API to provide pins from 'imported_fire_data_auto' in project_fire DB ---
+app.get('/api/imported-fire-data-pins', async (req, res) => {
+    let connection;
+    try {
+        console.log(`[API /api/imported-fire-data-pins] 동료의 외부 MySQL DB ('project_fire') '${process.env.COLLEAGUE_DB_DATABASE}' 조회 시도...`);
+        connection = await colleagueDbPool.getConnection(); // 동료 DB 풀 (project_fire)
+
+        const tableName = 'imported_fire_data_auto';
+        const lonCol = 'lng'; // As specified: 경도 컬럼은 lng
+        const latCol = 'lat'; // As specified: 위도 컬럼은 lat
+
+        // Selecting coordinates and adding a simple ID and name for each pin.
+        // You might want to select an actual ID column from your table if available.
+        const query = `SELECT \`${lonCol}\`, \`${latCol}\` FROM \`${tableName}\` WHERE \`${lonCol}\` IS NOT NULL AND \`${latCol}\` IS NOT NULL`;
+
+        const [rows] = await connection.query(query);
+        console.log(`[API /api/imported-fire-data-pins] '${tableName}' 테이블에서 ${rows.length}개 레코드 조회 완료. GeoJSON으로 변환 중...`);
+
+        const features = rows.map((row, index) => ({
+            type: 'Feature',
+            geometry: {
+                type: 'Point',
+                coordinates: [parseFloat(row[lonCol]), parseFloat(row[latCol])]
+            },
+            properties: {
+                pin_id: `imported_pin_${index + 1}`, // A generated ID for now
+                name: `Pin ${index + 1}` // A default name for the label
+                // Add other properties from 'row' here if needed later
+                // e.g., description: row.description_column
+            }
+        }));
+
+        res.json({ type: 'FeatureCollection', features });
+        console.log(`[API /api/imported-fire-data-pins] GeoJSON 응답 전송 완료.`);
+
+    } catch (err) {
+        console.error(`[API /api/imported-fire-data-pins] 오류:`, err);
+        res.status(500).json({ error: 'DB Error or Data Processing Error while fetching pins' });
+    } finally {
+        if (connection) connection.release();
+    }
+});
+
+// 서버 시작
+app.listen(port, () => {
+    console.log(`🔥 산불 예측 API 서버 running at http://localhost:${port}`);
+    console.log(`   아산/천안 연료 데이터 API (GET): http://localhost:${port}/api/fueldata/asancheonan`);
+    console.log(`   초기 예측 지점 API (GET): http://localhost:${port}/api/fire-predict-points`);
+    console.log(`   산불 확산 예측 API (POST): http://localhost:${port}/api/predict-fire-spread`);
+    console.log(`   (내 DB) 매핑된 격자 데이터 API (GET): http://localhost:${port}/api/mapped-grid-data`);
+    console.log(`   (동료 DB) 격자 데이터 API (GET): http://localhost:${port}/api/colleague-grid-data`);
+    console.log(`   (동료 DB) 가져온 산불 데이터 핀 API (GET): http://localhost:${port}/api/imported-fire-data-pins`);
+
 });
