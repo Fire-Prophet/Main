@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>OpenLayers GeoJSON Pin</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol/ol.css" type="text/css">
+    <style>
+        body { margin: 0; padding: 0; }
+        #map {
+            width: 100vw;
+            height: 100vh;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/ol/dist/ol.js"></script>
+</head>
+<body>
+    <div id="map"></div>
+    <script>
+        const geojsonPinObject = {
+            'type': 'Feature',
+            'geometry': {
+                'type': 'Point',
+                'coordinates': [127.0, 37.5] // Default: Seoul City Hall
+            },
+            'properties': {
+                'name': 'My GeoJSON Pin',
+                'description': 'This is a sample pin.'
+            }
+        };
+
+        const vectorSource = new ol.source.Vector({
+            features: new ol.format.GeoJSON().readFeatures(geojsonPinObject, {
+                featureProjection: 'EPSG:3857' // Project from Lon/Lat to Web Mercator
+            })
+        });
+
+        const pinStyle = new ol.style.Style({
+            image: new ol.style.Circle({
+                radius: 7,
+                fill: new ol.style.Fill({color: 'rgba(255, 0, 0, 0.7)'}),
+                stroke: new ol.style.Stroke({color: 'white', width: 1.5})
+            }),
+            text: new ol.style.Text({
+                text: geojsonPinObject.properties.name, // Display the name property
+                offsetY: -15, // Offset to display above the pin
+                fill: new ol.style.Fill({color: '#000'}),
+                stroke: new ol.style.Stroke({color: '#fff', width: 3})
+            })
+        });
+
+        const vectorLayer = new ol.layer.Vector({
+            source: vectorSource,
+            style: pinStyle
+        });
+
+        const map = new ol.Map({
+            target: 'map',
+            layers: [
+                new ol.layer.Tile({
+                    source: new ol.source.OSM()
+                }),
+                vectorLayer
+            ],
+            view: new ol.View({
+                center: ol.proj.fromLonLat(geojsonPinObject.geometry.coordinates),
+                zoom: 12
+            })
+        });
+
+        // Popup handling
+        const popupElement = document.createElement('div');
+        popupElement.innerHTML = '<p>You clicked here:</p><code></code>';
+        popupElement.style.backgroundColor = 'white';
+        popupElement.style.padding = '5px';
+        popupElement.style.border = '1px solid #ccc';
+        popupElement.style.borderRadius = '5px';
+        document.body.appendChild(popupElement); // Add to body, will be positioned by OL
+
+        const popup = new ol.Overlay({
+            element: popupElement,
+            positioning: 'bottom-center',
+            stopEvent: false,
+            offset: [0, -10]
+        });
+        map.addOverlay(popup);
+
+        map.on('click', function(evt) {
+            const feature = map.forEachFeatureAtPixel(evt.pixel,
+                function(feature) {
+                    return feature;
+                });
+            if (feature) {
+                const coordinates = feature.getGeometry().getCoordinates(); // These are in EPSG:3857
+                popup.setPosition(coordinates);
+                const properties = feature.getProperties();
+                let content = '<b>' + (properties.name || 'Pin') + '</b>';
+                if (properties.description) {
+                    content += '<br>' + properties.description;
+                }
+                popupElement.querySelector('code').innerHTML = content;
+
+                // --- Fire Simulation Placeholder ---
+                // Transform coordinates from map projection (EPSG:3857) back to Lon/Lat (EPSG:4326)
+                const lonLatCoordinates = ol.proj.toLonLat(coordinates);
+                console.log(`Fire simulation initiated at: Longitude ${lonLatCoordinates[0]}, Latitude ${lonLatCoordinates[1]}`);
+                // TODO: Replace console.log with actual fire simulation module call
+                // Example: startFireSimulation(lonLatCoordinates[0], lonLatCoordinates[1], properties);
+
+            } else {
+                popup.setPosition(undefined); // Hide popup
+            }
+        });
+    </script>
+    <script src="map_logic.js" defer></script>
+</body>
+</html>
