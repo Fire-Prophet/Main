@@ -1,4 +1,3 @@
-
 import Style from 'ol/style/Style';
 import Stroke from 'ol/style/Stroke';
 import Fill from 'ol/style/Fill';
@@ -19,9 +18,6 @@ export const fireSpreadDescriptions = {
     burned_out: '연소 완료',
     safe: '안전'
 };
-
-
-// [추가] 아산/천안 토양도 범례 정보
 
 export const asanCheonanSoilColorMap = {
     '01': '#c8824c', '02': '#c8ab4f', '03': '#c6c9b7', '05': '#efc27e',
@@ -63,31 +59,19 @@ export const mountainMarkerLegendInfo = {
     styleProps: { image: { type: 'circle', radius: 7, fill: { color: 'rgba(0, 128, 0, 0.8)' }, stroke: { color: 'white', width: 1.5 } } }
 };
 
-// [추가] 연료 등급별 색상 및 범례 정보
 export const fuelRatingColorMap = {
-    5: '#d73027', // 침엽수림 (매우 높음)
-    4: '#fc8d59', // 혼효림 (높음)
-    3: '#fee08b', // 활엽수림 (중간)
-    2: '#d9ef8b', // 죽림 (낮음)
-    0: 'rgba(200, 200, 200, 0.5)', // 비산림/기타 (해당 없음)
+    5: '#d73027', 4: '#fc8d59', 3: '#fee08b', 2: '#d9ef8b', 0: 'rgba(200, 200, 200, 0.5)',
 };
 export const fuelRatingDescriptions = {
-    5: '등급 5 (침엽수림 - 매우 높음)',
-    4: '등급 4 (혼효림 - 높음)',
-    3: '등급 3 (활엽수림 - 중간)',
-    2: '등급 2 (죽림 - 낮음)',
-    0: '등급 0 (비산림/기타)',
+    5: '등급 5 (침엽수림 - 매우 높음)', 4: '등급 4 (혼효림 - 높음)', 3: '등급 3 (활엽수림 - 중간)', 2: '등급 2 (죽림 - 낮음)', 0: '등급 0 (비산림/기타)',
 };
 
-
-// 논리적인 레이어 그룹 설정
 export const logicalLayersConfig = [
-    // [추가] 아산천안 토양도 레이어 설정
     { 
         name: '아산천안 토양도', 
         type: 'soil', 
         layerNames: ['ne:Asan_Cheonan_Soil_1', 'ne:Asan_Cheonan_Soil_2', 'ne:Asan_Cheonan_Soil_3'], 
-
+        // [수정] GeoServer URL 변경
         url: 'http://123.212.210.230:5555/geoserver/ne/wms', 
         visible: false, 
         isCollapsibleLegend: true, 
@@ -101,7 +85,6 @@ export const logicalLayersConfig = [
         layerNames: ['ne:imsangdo_part1', 'ne:imsangdo_part2', 'ne:imsangdo_part3'], 
         // [수정] GeoServer URL 변경
         url: 'http://123.212.210.230:5555/geoserver/ne/wms', 
-
         visible: false,
         isCollapsibleLegend: true, 
         colorMap: imsangdoColorMap, 
@@ -121,8 +104,7 @@ export const logicalLayersConfig = [
         type: 'fuel_rating',
         // [수정] API 서버 URL을 상대 경로로 변경
         url: '/api/grid-with-fuel-info',
-        visible: true,
-
+        visible: false,
         isCollapsibleLegend: true,
         defaultCollapsed: false,
         legendInfo: {
@@ -132,7 +114,6 @@ export const logicalLayersConfig = [
             descriptions: fuelRatingDescriptions,
         }
     },
-
     {
         name: '산악기상관측소 마커',
         type: 'mountain_station_markers',
@@ -143,10 +124,8 @@ export const logicalLayersConfig = [
     { 
         name: '전국 격자 데이터',
         type: 'mapped_grid_data_vector', 
-
+        // [수정] API 서버 URL을 상대 경로로 변경
         url: '/api/mapped-grid-data', 
-
-        url: 'http://localhost:3001/api/mapped-grid-data', 
         visible: false, 
         isCollapsibleLegend: true,
         defaultCollapsed: false,

@@ -366,9 +366,10 @@ const VWorldMap = () => {
             layerRefs.current['전국 격자 데이터'].setVisible(false); 
         }
         try {
-
-            const response = await fetch('/api/predict-fire-spread', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ignition_id: ignitionId }) });
-
+            const response = await fetch('http://123.212.210.230:4444/api/predict-fire-spread', { 
+                method: 'POST', headers: { 'Content-Type': 'application/json' }, 
+                body: JSON.stringify({ ignition_id: ignitionId })
+            });
             if (!response.ok) { 
                 const errData = await response.json(); 
                 throw new Error(errData.error || '시뮬레이션 API 요청 실패'); 
