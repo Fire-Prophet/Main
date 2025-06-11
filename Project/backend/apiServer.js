@@ -5,7 +5,7 @@ const cors = require('cors');
 const mysql = require('mysql2/promise');
 const turf = require('@turf/turf');
 const db = require('./firebaseAdmin');
-const { mountainStationsData } = require('./mountainStations');
+const { mountainStationsData } = require('./mountainStationsData');
 
 class PriorityQueue {
     constructor() { this.elements = []; }
