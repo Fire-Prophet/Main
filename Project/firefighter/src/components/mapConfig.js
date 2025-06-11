@@ -1,4 +1,3 @@
-// src/components/mapConfig.js (수정된 파일)
 
 import Style from 'ol/style/Style';
 import Stroke from 'ol/style/Stroke';
@@ -21,7 +20,9 @@ export const fireSpreadDescriptions = {
     safe: '안전'
 };
 
+
 // [추가] 아산/천안 토양도 범례 정보
+
 export const asanCheonanSoilColorMap = {
     '01': '#c8824c', '02': '#c8ab4f', '03': '#c6c9b7', '05': '#efc27e',
     '06': '#19ee12', '28': '#7182d9', '82': '#d2533f', '91': '#62e0d6',
@@ -86,7 +87,8 @@ export const logicalLayersConfig = [
         name: '아산천안 토양도', 
         type: 'soil', 
         layerNames: ['ne:Asan_Cheonan_Soil_1', 'ne:Asan_Cheonan_Soil_2', 'ne:Asan_Cheonan_Soil_3'], 
-        url: 'http://localhost:8080/geoserver/ne/wms', 
+
+        url: 'http://123.212.210.230:5555/geoserver/ne/wms', 
         visible: false, 
         isCollapsibleLegend: true, 
         colorMap: asanCheonanSoilColorMap, 
@@ -97,7 +99,9 @@ export const logicalLayersConfig = [
         name: '아산천안 임상도', 
         type: 'imsangdo', 
         layerNames: ['ne:imsangdo_part1', 'ne:imsangdo_part2', 'ne:imsangdo_part3'], 
-        url: 'http://localhost:8080/geoserver/ne/wms', 
+        // [수정] GeoServer URL 변경
+        url: 'http://123.212.210.230:5555/geoserver/ne/wms', 
+
         visible: false,
         isCollapsibleLegend: true, 
         colorMap: imsangdoColorMap, 
@@ -112,12 +116,13 @@ export const logicalLayersConfig = [
         isCollapsibleLegend: false, 
         legendInfo: hikingTrailLegendInfo 
     },
-    // [추가] 연료 등급 지도 레이어 설정
     {
         name: '연료 등급 지도',
         type: 'fuel_rating',
-        url: 'http://localhost:3001/api/grid-with-fuel-info',
-        visible: false, // [수정] true로 변경하여 기본 활성화
+        // [수정] API 서버 URL을 상대 경로로 변경
+        url: '/api/grid-with-fuel-info',
+        visible: true,
+
         isCollapsibleLegend: true,
         defaultCollapsed: false,
         legendInfo: {
@@ -127,7 +132,7 @@ export const logicalLayersConfig = [
             descriptions: fuelRatingDescriptions,
         }
     },
-    
+
     {
         name: '산악기상관측소 마커',
         type: 'mountain_station_markers',
@@ -138,6 +143,9 @@ export const logicalLayersConfig = [
     { 
         name: '전국 격자 데이터',
         type: 'mapped_grid_data_vector', 
+
+        url: '/api/mapped-grid-data', 
+
         url: 'http://localhost:3001/api/mapped-grid-data', 
         visible: false, 
         isCollapsibleLegend: true,
