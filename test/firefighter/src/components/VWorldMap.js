@@ -331,24 +331,65 @@ const VWorldMap = () => {
 
     // --- 레이어 가시성 변경 useEffect ---
     useEffect(() => {
-        if (!olMapRef.current || !layerRefs.current) return;
+        if (!olMapRef.current || !layerRefs.current) {
+            console.warn('[Visibility Effect] Map or layerRefs not ready.');
+            return; 
+        }
+        // Use JSON.stringify/parse for a deep copy for logging, to avoid logging stale state if it's mutated later by other effects or async operations before console displays it.
+        try {
+            console.log('[Visibility Effect] Triggered. Current layerVisibility:', JSON.parse(JSON.stringify(layerVisibility)));
+        } catch (e) {
+            console.log('[Visibility Effect] Triggered. Current layerVisibility (logging error, raw):', layerVisibility);
+        }
+        console.log('[Visibility Effect] Current layerRefs:', layerRefs.current);
+
         logicalLayersConfig.forEach(groupConfig => {
-            const isVisible = layerVisibility[groupConfig.name];
-            const layerOrGroup = layerRefs.current[groupConfig.name];
-            if (Array.isArray(layerOrGroup)) { // WMS 그룹 (개별 레이어 배열)
-                layerOrGroup.forEach(l => l.setVisible(isVisible));
-            } else if (layerOrGroup && typeof layerOrGroup.setVisible === 'function') { // 단일 VectorLayer 등
-                layerOrGroup.setVisible(isVisible);
-            }
-            // 개별 WMS 레이어 처리 (초기화 로직에서 currentLayerObjects[`${groupConfig.name}-${individualLayerName}`] 형태로 저장한 경우)
-            if (groupConfig.layerNames && !Array.isArray(layerOrGroup)) {
-                 groupConfig.layerNames.forEach(name => {
-                    const l = layerRefs.current[`${groupConfig.name}-${name}`];
-                    if(l) l.setVisible(isVisible);
-                 });
+            if (!groupConfig || !groupConfig.name) {
+                console.warn('[Visibility Effect] Invalid groupConfig encountered:', groupConfig);
+                return; // Skip this iteration
             }
 
-            if (groupConfig.type === 'mountain_station_markers' && !isVisible) setSelectedStation(null);
+            const isVisible = layerVisibility[groupConfig.name];
+            const layerOrGroup = layerRefs.current[groupConfig.name];
+
+            console.log(`[Visibility Effect] Processing group: '${groupConfig.name}', Target visibility: ${isVisible}`);
+
+            if (layerOrGroup === undefined) {
+                // Check if it's a WMS group that stores layers individually by name-layerName
+                if (groupConfig.layerNames && Array.isArray(groupConfig.layerNames)) {
+                    console.warn(`[Visibility Effect] Group '${groupConfig.name}' not found directly in layerRefs. Checking individual WMS layers.`);
+                    groupConfig.layerNames.forEach(name => {
+                        const individualLayerKey = groupConfig.name + '-' + name;
+                        const l = layerRefs.current[individualLayerKey];
+                        if (l && typeof l.setVisible === 'function') {
+                            console.log(`[Visibility Effect] Setting visibility for individual WMS layer '${individualLayerKey}' to ${isVisible}`);
+                            l.setVisible(isVisible);
+                        } else {
+                            console.warn(`[Visibility Effect] Individual WMS layer '${individualLayerKey}' is invalid or has no setVisible method:`, l);
+                        }
+                    });
+                } else {
+                    console.warn(`[Visibility Effect] Layer/Group '${groupConfig.name}' not found in layerRefs.current and not a WMS group with layerNames.`);
+                }
+            } else if (Array.isArray(layerOrGroup)) { // WMS 그룹 (개별 레이어 배열)
+                console.log(`[Visibility Effect] Group '${groupConfig.name}' is an array of layers (likely WMS). Count: ${layerOrGroup.length}. Setting visibility to ${isVisible}`);
+                layerOrGroup.forEach((l, index) => {
+                    if (l && typeof l.setVisible === 'function') {
+                        l.setVisible(isVisible);
+                    } else {
+                        console.warn(`[Visibility Effect] Sub-layer ${index} of group '${groupConfig.name}' is invalid or has no setVisible method:`, l);
+                    }
+                });
+            } else if (layerOrGroup && typeof layerOrGroup.setVisible === 'function') { // 단일 VectorLayer 등
+                console.log(`[Visibility Effect] Group '${groupConfig.name}' is a single layer. Setting visibility to ${isVisible}`);
+                layerOrGroup.setVisible(isVisible);
+            } else {
+                console.warn(`[Visibility Effect] Group '${groupConfig.name}' could not be processed. layerOrGroup:`, layerOrGroup);
+            }
+
+            if (groupConfig.type === 'mountain_station_markers' && !isVisible) {
+                setSelectedStation(null);
+            }
         });
     }, [layerVisibility, logicalLayersConfig]);
 

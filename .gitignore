@@ -66,3 +66,8 @@ coverage.xml
 .tox/
 .nox/
 .pytest_cache/
+
+# Node modules
+Project/backend/node_modules/
+Project/firefighter/node_modules/
+Project/backend/serviceAccountKey.json
