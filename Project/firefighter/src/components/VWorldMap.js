@@ -7,8 +7,11 @@ import XYZ from 'ol/source/XYZ';
 import VectorSource from 'ol/source/Vector';
 import GeoJSON from 'ol/format/GeoJSON';
 import TileWMS from 'ol/source/TileWMS';
-import { Style, Circle as CircleStyle, Fill, Stroke } from 'ol/style';
+import { Style, Circle as CircleStyle, Fill, Stroke, RegularShape } from 'ol/style';
 import 'ol/ol.css';
+
+import { transform } from 'ol/proj'; // 이 라인을 추가해주세요.
+
 
 import {
     VWORLD_XYZ_URL,
@@ -25,6 +28,7 @@ import { subscribeToStationWeather } from './weatherService';
 const WeatherDisplay = ({ selectedStationInfo }) => {
     const [weatherInfo, setWeatherInfo] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
+
     const [error, setError] = useState(null);
 
     useEffect(() => {
@@ -80,6 +84,8 @@ const WeatherDisplay = ({ selectedStationInfo }) => {
 };
 
 const VWorldMap = () => {
+    const liveMarkerSourceRef = useRef(null); // 실시간 마커를 위한 새로운 소스(Source) ref
+    const [liveMarkers, setLiveMarkers] = useState([]); // 서버에서 받아온 마커 데이터를 저장할 state
     const mapContainerRef = useRef(null);
     const olMapRef = useRef(null);
     const layerRefs = useRef({});
@@ -145,6 +151,31 @@ const VWorldMap = () => {
         });
     }, []);
 
+
+    // 기존 스타일 함수들(fuelRatingStyleFunction 등) 근처에 추가합니다.
+    const liveMarkerStyleFunction = useCallback((feature) => {
+        const color = feature.get('color') || 'gray'; // 마커의 color 속성을 가져옴
+        const colorMap = {
+            'red': 'rgba(220, 53, 69, 0.8)',
+            'green': 'rgba(25, 135, 84, 0.8)',
+            'gray': 'rgba(108, 117, 125, 0.8)'
+        };
+
+        return new Style({
+            image: new RegularShape({
+                fill: new Fill({ color: colorMap[color] }),
+                stroke: new Stroke({ color: 'white', width: 1.5 }),
+                points: 4, // 4는 사각형
+                radius: 20, // 사각형 크기
+                angle: Math.PI / 4 // 45도 회전 (정사각형으로 보이게)
+            })
+        });
+    }, []);
+
+
+
+
+
     const transparentStyle = useMemo(() => new Style({ image: new CircleStyle({ radius: 3.5, fill: new Fill({ color: 'rgba(0,0,0,0)' }) }) }), []);
     const burnedOutStyle = useMemo(() => new Style({ image: new CircleStyle({ radius: 3.5, fill: new Fill({ color: fireSpreadColors.burned_out }) }) }), []);
     const burningStyle = useMemo(() => new Style({ image: new CircleStyle({ radius: 3.5, fill: new Fill({ color: fireSpreadColors.burning }) }) }), []);
@@ -179,6 +210,21 @@ const VWorldMap = () => {
             view: new View({ center: [127.5, 36.5], zoom: 9, projection: 'EPSG:4326' }),
         });
         olMapRef.current = map;
+
+
+        const lSource = new VectorSource();
+        liveMarkerSourceRef.current = lSource;
+        
+        const liveMarkerLayer = new VectorLayer({
+            source: liveMarkerSourceRef.current,
+            style: liveMarkerStyleFunction,
+            zIndex: 10 // 다른 레이어들보다 위에 보이도록 z-index 설정
+        });
+        map.addLayer(liveMarkerLayer);
+
+
+
+
 
         const boundaryLayer = new VectorLayer({ source: boundarySourceRef.current, style: boundaryStyleFunction, zIndex: 1 });
         boundaryLayerRef.current = boundaryLayer;
@@ -447,6 +493,64 @@ const VWorldMap = () => {
     const handleToggleLegendCollapse = useCallback((name) => {
         setCollapsedLegends(p => ({ ...p, [name]: !p[name] }));
     }, []);
+
+    
+    // VWorldMap 컴포넌트의 return 문 바로 위에, 이 useEffect 훅 하나만 추가하세요.
+    useEffect(() => {
+        // 실시간 마커를 위한 VectorSource와 Layer가 아직 없으면 생성
+        if (!liveMarkerSourceRef.current && olMapRef.current) {
+            const lSource = new VectorSource();
+            liveMarkerSourceRef.current = lSource;
+
+            const liveMarkerLayer = new VectorLayer({
+                source: liveMarkerSourceRef.current,
+                style: liveMarkerStyleFunction, // 이전에 추가한 스타일 함수
+                zIndex: 10
+            });
+            olMapRef.current.addLayer(liveMarkerLayer);
+        }
+
+        const fetchAndDrawMarkers = async () => {
+        try {
+            const response = await fetch(`/data/fire_markers.json?t=${Date.now()}`);
+            if (!response.ok) {
+            console.error('실시간 마커 데이터 로드 실패:', response.status);
+            liveMarkerSourceRef.current.clear(); // 파일이 없으면 기존 마커 지우기
+            return;
+            }
+            const markers = await response.json();
+
+            // 마커 그리기
+            if (liveMarkerSourceRef.current) {
+                liveMarkerSourceRef.current.clear(); // 기존 마커 모두 지우기
+                if (markers && markers.length > 0) {
+                    const newFeatures = markers.map(marker => {
+                        // [marker.lon, marker.lat] 좌표가 'EPSG:4326' 임을 명시적으로 알려줍니다.
+                        const transformedCoords = transform([marker.lon, marker.lat], 'EPSG:4326', 'EPSG:4326');
+                        
+                        return new Feature({
+                            geometry: new Point(transformedCoords),
+                            color: marker.color
+                        });
+                    });
+                    liveMarkerSourceRef.current.addFeatures(newFeatures);
+                }
+            }
+        } catch (error) {
+            console.error('실시간 마커 데이터 처리 중 오류:', error);
+        }
+        };
+
+        // 1. 처음 로딩 시 즉시 실행
+        fetchAndDrawMarkers();
+
+        // 2. 1분마다 주기적으로 다시 실행
+        const interval = setInterval(fetchAndDrawMarkers, 60000);
+
+        // 3. 컴포넌트가 사라질 때 인터벌 정리
+        return () => clearInterval(interval);
+    }, []); // 의존성 배열을 비워서, 이 모든 로직이 처음 한 번만 설정되도록 함
+
 
     return (
         <div style={{ position: 'relative', width: '100%', height: '100vh' }}>
